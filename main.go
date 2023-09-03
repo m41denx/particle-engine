@@ -32,6 +32,7 @@ func main() {
 	case "prepare":
 		CmdPrepare(flag.Arg(1))
 	case "build":
+		CmdBuild(flag.Arg(1))
 	case "auth":
 	case "publish":
 		break

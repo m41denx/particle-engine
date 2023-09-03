@@ -86,6 +86,10 @@ func (l *Layer) ExtractTo(dest string) (err error) {
 	return nil
 }
 
+func (l *Layer) CreateLayer(from string, to string) (err error) {
+	return UnzipProvider.OpenZip(to).WorkDir(from).AddDirectory("").Compress()
+}
+
 func (l *Layer) Download(id string) {
 	hget.HGET_PREFIX = l.d
 	hget.Execute(l.server+path.Join("layers", id), nil, runtime.NumCPU(), false)

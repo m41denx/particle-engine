@@ -68,7 +68,7 @@ user/program_pro (static)
 3) здесь делаете свою мешанину в dist и допиливаете команды в run
 4) particle build
       собирает партикл в out из dist, добавляя новые файлы как есть, изменения в патчфайлы filename.ext.patch
-      (например config.xml изменился, пакуем config.xml.patch), удаления в .deletions.json. Все это пакуется в 7z
+      (например config.xml изменился, пакуем config.xml.patch), удаления в .deletions. Все это пакуется в 7z
       и считается md5, который ставится в поле block манифеста
 5) particle auth логин пароль
       позволяет войти в particle store

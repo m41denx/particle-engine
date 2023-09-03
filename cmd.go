@@ -49,3 +49,11 @@ func CmdPrepare(pathname string) {
 	}
 	particle.Analyze()
 }
+
+func CmdBuild(pathname string) {
+	particle, err := particle2.NewParticleFromFile(path.Join(pathname, "particle.json"))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	particle.Build()
+}

@@ -13,6 +13,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -77,6 +78,34 @@ func (p *Particle) Analyze() {
 
 	fmt.Println(color.CyanString("Executing applicables..."))
 	p.executeApplicable()
+}
+
+func (p *Particle) Build() {
+	fmt.Println(color.CyanString("Building particle..."))
+	p.compareIntegrity()
+	progress := utils.NewTreeProgress()
+	progress.TrackFunction("Building layer...", p.makeLayer)
+	p.Manifest.SaveTo(filepath.Join(p.dir, "particle.json"))
+}
+
+func (p *Particle) makeLayer() {
+	l := NewLayer(p.Manifest.GetLayerServer())
+	err := l.CreateLayer(filepath.Join(p.dir, "out"), filepath.Join("_tmp_layer_.7z"))
+	if err != nil {
+		fmt.Println(color.RedString("\nERROR: "), err)
+		panic(err)
+	}
+	h, err := utils.CalcFileHash(filepath.Join(p.dir, "out", "_tmp_layer_.7z"))
+	if err != nil {
+		fmt.Println(color.RedString("\nERROR: "), err)
+		panic(err)
+	}
+	err = os.Rename(filepath.Join(p.dir, "out", "_tmp_layer_.7z"), filepath.Join(p.dir, h))
+	if err != nil {
+		fmt.Println(color.RedString("\nERROR: "), err)
+		panic(err)
+	}
+	p.Manifest.Block = h
 }
 
 func (p *Particle) makeTree(progress *utils.TreeProgress) {
@@ -226,6 +255,10 @@ func (p *Particle) populateEngineBinaries() {
 	for _, v := range EngineCache {
 		for bin, pathw := range v.Runnables {
 			runnables[bin] = pathw
+			sym := filepath.Join(p.dir, "bin", bin+utils.SymlinkPostfix)
+			if _, err := os.Stat(sym); err == nil {
+				os.Remove(sym)
+			}
 			err := os.Symlink(pathw, filepath.Join(p.dir, "bin", bin+utils.SymlinkPostfix))
 
 			if err != nil {
@@ -269,14 +302,14 @@ func (p *Particle) prepareApplicable() {
 }
 
 func (p *Particle) executeApplicable() {
-	for _, ap := range p.layers {
-		if ap == nil {
+	for _, app := range p.layers {
+		if app == nil {
 			continue
 		}
-		ap.executeApplicable()
+		app.executeApplicable()
 		fmt.Println(color.GreenString("→ %s [%s]...", p.Manifest.Name, p.Manifest.Block))
-		for _, ex := range ap.Manifest.Recipe.Run {
-			cmd := PrepareExecutor(p.dir, ex)
+		for _, ex := range app.Manifest.Recipe.Run {
+			cmd := PrepareExecutor(p.dir, ex, filepath.Join("src", app.Manifest.Name))
 			err := cmd.Run()
 			if err != nil {
 				fmt.Println(color.RedString("\nERROR: "), err)
@@ -290,22 +323,79 @@ func (p *Particle) calculateIntegrityHash() {
 	progress := utils.NewTreeProgress()
 
 	progress.TrackFunction("Calculating integrity hash", func() {
-		hashes := make(map[string]string)
-		fl := utils.LDir(filepath.Join(p.dir, "dist"), "")
-		for _, f := range fl {
-			hs, err := utils.CalcFileHash(filepath.Join(p.dir, "dist", f))
-			if err != nil {
-				fmt.Println(color.RedString("\nERROR: "), "Unable to calculate hash for", f)
-				panic(err)
-			}
-			hashes[f] = hs
-		}
+		hashes := p.getIntegrityHashInternal()
 		d, err := json.MarshalIndent(hashes, "", "\t")
 		if err != nil || os.WriteFile(filepath.Join(p.dir, "integrity.json"), d, 0755) != nil {
 			fmt.Println(color.RedString("\nERROR: "), "Unable to generate JSON")
 			panic(err)
 		}
 	})
+}
+
+func (p *Particle) getIntegrityHashInternal() map[string]string {
+	hashes := make(map[string]string)
+	fl := utils.LDir(filepath.Join(p.dir, "dist"), "")
+	for _, f := range fl {
+		hs, err := utils.CalcFileHash(filepath.Join(p.dir, "dist", f))
+		if err != nil {
+			fmt.Println(color.RedString("\nERROR: "), "Unable to calculate hash for", f)
+			panic(err)
+		}
+		hashes[f] = hs
+	}
+	return hashes
+}
+
+func (p *Particle) compareIntegrity() {
+	newHashes := p.getIntegrityHashInternal()
+	oldHashes := make(map[string]string)
+	deltas := make([]string, 1)
+	deletions := make([]string, 1)
+	snew := 0
+	srem := 0
+	d, err := os.ReadFile(filepath.Join(p.dir, "integrity.json"))
+	if err != nil || json.Unmarshal(d, &oldHashes) != nil {
+		fmt.Println(color.RedString("\nERROR: "), "Unable to read integrity.json")
+		panic(err)
+	}
+	for f, hNew := range newHashes {
+		hOld, ok := oldHashes[f]
+		if !ok || hNew != hOld {
+			fmt.Println(color.GreenString("+ %s [%s]", f, hNew))
+			snew++
+			deltas = append(deltas, f)
+			os.MkdirAll(filepath.Dir(filepath.Join(p.dir, "out", f)), 0755)
+			fh, err1 := os.Open(filepath.Join(p.dir, "dist", f))
+			nh, err2 := os.Create(filepath.Join(p.dir, "out", f))
+			if err1 != nil || err2 != nil {
+				fmt.Println(color.RedString("\nERROR: "), err1, err2)
+				panic(err)
+			}
+			defer fh.Close()
+			defer nh.Close()
+			_, err3 := io.Copy(nh, fh)
+			if err3 != nil {
+				fmt.Println(color.RedString("\nERROR: "), err3)
+				panic(err)
+			}
+		}
+	}
+	for f, hOld := range oldHashes {
+		_, ok := newHashes[f]
+		if !ok {
+			fmt.Println(color.RedString("- %s [%s]", f, hOld))
+			srem++
+			deletions = append(deletions, f)
+		}
+	}
+	if len(deletions) > 0 {
+		deletionsData := strings.Join(deletions, "\n")
+		err = os.WriteFile(filepath.Join(p.dir, "out", ".deletions"), []byte(deletionsData), 0755)
+		if err != nil {
+			fmt.Println(color.RedString("\nERROR: "), err)
+			panic(err)
+		}
+	}
 }
 
 func (p *Particle) fetchManifest(pkg string) (*structs.Manifest, error) {

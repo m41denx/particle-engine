@@ -13,6 +13,7 @@ type SevenZip struct {
 	binpath string
 	archive string
 	args    []string
+	workdir string
 }
 
 func New7Zip() *SevenZip {
@@ -35,14 +36,22 @@ func (s *SevenZip) OpenZip(archive string) *SevenZip {
 }
 
 func (s *SevenZip) AddDirectory(dir string) *SevenZip {
-	s.args = append(s.args, dir+"/* ")
+	s.args = append(s.args, filepath.Join(dir, "*"))
+	return s
+}
+func (s *SevenZip) WorkDir(dir string) *SevenZip {
+	s.workdir = dir
 	return s
 }
 
 func (s *SevenZip) Compress() error {
 	args := []string{"a", s.archive}
 	args = append(args, s.args...)
+	//fmt.Println("\n", args)
 	cmd := exec.Command(s.binpath, args...)
+	//cmd.Stdout = os.Stdout
+	//cmd.Stderr = os.Stderr
+	cmd.Dir = s.workdir
 	return cmd.Run()
 }
 

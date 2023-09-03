@@ -3,6 +3,7 @@ package particle
 import (
 	"encoding/json"
 	"github.com/alessio/shellescape"
+	"github.com/m41denx/particle/utils"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -41,14 +42,26 @@ func (e *Engine) Load() error {
 	return nil
 }
 
-func PrepareExecutor(dir string, command string) *exec.Cmd {
+func PrepareExecutor(dir string, command string, module string) *exec.Cmd {
 	os.Setenv("PATH", os.Getenv("PATH")+";"+filepath.Join(dir, "bin"))
 	c := strings.Fields(command)
-	cmd := exec.Command(c[0], c[1:]...)
+	comd := filepath.Join(dir, "bin", c[0]+utils.SymlinkPostfix)
+	info, err := os.Stat(comd)
+	if err != nil || info.IsDir() {
+		comd = c[0]
+	} else {
+		comd, _ = filepath.Abs(comd)
+	}
 	env := os.Environ()
 	for k, v := range MetaCache {
 		env = append(env, k+"="+shellescape.Quote(v))
 	}
+	env = append(env, "MOD="+shellescape.Quote(module))
+	os.Setenv("MOD", module)
+	for i, k := range c {
+		c[i] = os.ExpandEnv(k)
+	}
+	cmd := exec.Command(comd, c[1:]...)
 	cmd.Dir = dir
 	cmd.Env = env
 	cmd.Stdout = os.Stdout

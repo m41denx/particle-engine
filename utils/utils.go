@@ -11,6 +11,7 @@ import (
 func CalcFileHash(dp string) (string, error) {
 	hash := md5.New()
 	fp, err := os.Open(dp)
+	defer fp.Close()
 	if err != nil {
 		return "", err
 	}
