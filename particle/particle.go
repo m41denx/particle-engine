@@ -64,12 +64,19 @@ func (p *Particle) Analyze() {
 	p.downloadLayers()
 	if p.base != nil {
 		fmt.Println(color.CyanString("Extracting base..."))
-		p.base.prepareBase() // We build new particle, so we need to operate on it's base rather than itself
+		p.base.prepareBase("dist") // We build new particle, so we need to operate on it's base rather than itself
 	}
 	p.calculateIntegrityHash()
+
 	fmt.Println(color.CyanString("Warming up engines..."))
 	p.prepareEngines()
 	p.populateEngineBinaries()
+
+	fmt.Println(color.CyanString("Preparing applicables..."))
+	p.prepareApplicable()
+
+	fmt.Println(color.CyanString("Executing applicables..."))
+	p.executeApplicable()
 }
 
 func (p *Particle) makeTree(progress *utils.TreeProgress) {
@@ -139,7 +146,7 @@ func (p *Particle) makeTree(progress *utils.TreeProgress) {
 func (p *Particle) downloadLayers() {
 	for k, particle := range ParticleCache {
 		fmt.Print(color.GreenString("→ %s [%s]", k, particle.Manifest.Block))
-		l := NewLayer(particle.Manifest.GetServer())
+		l := NewLayer(particle.Manifest.GetLayerServer())
 		err := l.Fetch(particle.Manifest.Block)
 		if err != nil {
 			fmt.Println(color.RedString("\nERROR: "), err)
@@ -149,9 +156,9 @@ func (p *Particle) downloadLayers() {
 	}
 }
 
-func (p *Particle) prepareBase() {
+func (p *Particle) prepareBase(target string) {
 	if p.base != nil {
-		p.base.prepareBase()
+		p.base.prepareBase(target)
 	}
 	progress := utils.NewTreeProgress()
 
@@ -161,7 +168,7 @@ func (p *Particle) prepareBase() {
 			fmt.Println(color.RedString("\nERROR: "), p.Manifest.Block+": layer was not found. Not sure what to do...")
 			panic(ok)
 		}
-		err := layer.ExtractTo(filepath.Join(p.dir, "dist"))
+		err := layer.ExtractTo(filepath.Join(p.dir, target))
 		if err != nil {
 			fmt.Println(color.RedString("\nERROR: "), err)
 			panic(err)
@@ -184,12 +191,15 @@ func (p *Particle) prepareEngines() {
 		}
 		// Yeah, those too
 		eng.prepareEngines()
+		if eng.base != nil {
+			eng.base.prepareBase(filepath.Join("engines", eng.Manifest.Name))
+		}
 
 		progress := utils.NewTreeProgress()
 		progress.TrackFunction(fmt.Sprintf("→ %s [%s]...", eng.Manifest.Name, eng.Manifest.Block), func() {
 			layer, ok := LayerCache[eng.Manifest.Block]
 			if !ok {
-				fmt.Println(color.RedString("\nERROR: "), p.Manifest.Block+": layer was not found. Not sure what to do...")
+				fmt.Println(color.RedString("\nERROR: "), eng.Manifest.Block+": layer was not found. Not sure what to do...")
 				panic(ok)
 			}
 			err := layer.ExtractTo(filepath.Join(p.dir, "engines", eng.Manifest.Name))
@@ -204,6 +214,9 @@ func (p *Particle) prepareEngines() {
 				panic(err)
 			}
 			EngineCache[eng.Manifest.Name] = engine
+			for k, v := range eng.Manifest.Meta {
+				MetaCache[k] = os.ExpandEnv(v)
+			}
 		})
 	}
 }
@@ -213,7 +226,8 @@ func (p *Particle) populateEngineBinaries() {
 	for _, v := range EngineCache {
 		for bin, pathw := range v.Runnables {
 			runnables[bin] = pathw
-			err := os.Symlink(pathw, filepath.Join(p.dir, "bin", bin))
+			err := os.Symlink(pathw, filepath.Join(p.dir, "bin", bin+utils.SymlinkPostfix))
+
 			if err != nil {
 				fmt.Println(color.RedString("\nERROR: "), err)
 				panic(err)
@@ -221,8 +235,55 @@ func (p *Particle) populateEngineBinaries() {
 		}
 	}
 	d, _ := json.MarshalIndent(runnables, "", "\t")
-	os.WriteFile(filepath.Join(p.dir, "engines", "run.json"), d, 0755)
+	_ = os.WriteFile(filepath.Join(p.dir, "engines", "run.json"), d, 0755)
 	fmt.Println(color.GreenString("Installed %d engines and exposed %d binaries", len(EngineCache), len(runnables)))
+}
+
+func (p *Particle) prepareApplicable() {
+	for _, app := range p.layers {
+		if app == nil {
+			continue
+		}
+
+		if app.base != nil {
+			app.base.prepareBase(filepath.Join("src", app.Manifest.Name))
+		}
+
+		progress := utils.NewTreeProgress()
+		progress.TrackFunction(fmt.Sprintf("→ %s [%s]...", app.Manifest.Name, app.Manifest.Block), func() {
+			layer, ok := LayerCache[app.Manifest.Block]
+			if !ok {
+				fmt.Println(color.RedString("\nERROR: "), app.Manifest.Block+": layer was not found. Not sure what to do...")
+				panic(ok)
+			}
+			err := layer.ExtractTo(filepath.Join(p.dir, "src", app.Manifest.Name))
+			if err != nil {
+				fmt.Println(color.RedString("\nERROR: "), err)
+				panic(err)
+			}
+			for k, v := range app.Manifest.Meta {
+				MetaCache[k] = os.ExpandEnv(v)
+			}
+		})
+	}
+}
+
+func (p *Particle) executeApplicable() {
+	for _, ap := range p.layers {
+		if ap == nil {
+			continue
+		}
+		ap.executeApplicable()
+		fmt.Println(color.GreenString("→ %s [%s]...", p.Manifest.Name, p.Manifest.Block))
+		for _, ex := range ap.Manifest.Recipe.Run {
+			cmd := PrepareExecutor(p.dir, ex)
+			err := cmd.Run()
+			if err != nil {
+				fmt.Println(color.RedString("\nERROR: "), err)
+				panic(err)
+			}
+		}
+	}
 }
 
 func (p *Particle) calculateIntegrityHash() {

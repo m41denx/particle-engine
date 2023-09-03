@@ -2,8 +2,11 @@ package particle
 
 import (
 	"encoding/json"
+	"github.com/alessio/shellescape"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 type Engine struct {
@@ -36,4 +39,19 @@ func (e *Engine) Load() error {
 		e.Runnables[k] = p
 	}
 	return nil
+}
+
+func PrepareExecutor(dir string, command string) *exec.Cmd {
+	os.Setenv("PATH", os.Getenv("PATH")+";"+filepath.Join(dir, "bin"))
+	c := strings.Fields(command)
+	cmd := exec.Command(c[0], c[1:]...)
+	env := os.Environ()
+	for k, v := range MetaCache {
+		env = append(env, k+"="+shellescape.Quote(v))
+	}
+	cmd.Dir = dir
+	cmd.Env = env
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd
 }

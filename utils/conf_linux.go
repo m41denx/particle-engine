@@ -8,3 +8,5 @@ import _ "embed"
 var SevenZipExecutable []byte
 
 const SevenZipName = "7z.bin"
+
+const SymlinkPostfix = ""

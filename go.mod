@@ -11,6 +11,7 @@ require (
 )
 
 require (
+	github.com/alessio/shellescape v1.4.2 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/bodgit/plumbing v1.3.0 // indirect
 	github.com/bodgit/windows v1.0.1 // indirect

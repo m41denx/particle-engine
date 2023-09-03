@@ -13,3 +13,5 @@ const SevenZipName = "7z.exe"
 var BusyboxExecutable []byte
 
 const BusyboxName = "busybox.exe"
+
+const SymlinkPostfix = ".exe"

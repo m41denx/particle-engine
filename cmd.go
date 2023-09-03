@@ -10,7 +10,8 @@ import (
 	"path"
 )
 
-const GitIgnore = `dist/
+const GitIgnore = `bin/
+dist/
 engines/
 out/
 src/`

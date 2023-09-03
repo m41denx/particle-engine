@@ -12,6 +12,7 @@ func init() {
 	particle.ParticleCache = make(map[string]*particle.Particle)
 	particle.LayerCache = make(map[string]*particle.Layer)
 	particle.EngineCache = make(map[string]*particle.Engine)
+	particle.MetaCache = make(map[string]string)
 }
 
 func main() {
