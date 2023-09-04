@@ -67,6 +67,9 @@ func (p *Particle) Analyze() {
 		fmt.Println(color.CyanString("Extracting base..."))
 		p.base.prepareBase("dist") // We build new particle, so we need to operate on it's base rather than itself
 	}
+	for k, v := range p.Manifest.Meta {
+		MetaCache[k] = v
+	}
 	p.calculateIntegrityHash()
 
 	fmt.Println(color.CyanString("Warming up engines..."))
@@ -203,6 +206,10 @@ func (p *Particle) prepareBase(target string) {
 			panic(err)
 		}
 	})
+
+	for k, v := range p.Manifest.Meta {
+		MetaCache[k] = v
+	}
 }
 
 func (p *Particle) prepareEngines() {
@@ -307,7 +314,7 @@ func (p *Particle) executeApplicable() {
 			continue
 		}
 		app.executeApplicable()
-		fmt.Println(color.GreenString("→ %s [%s]...", p.Manifest.Name, p.Manifest.Block))
+		fmt.Println(color.GreenString("→ %s [%s]...", app.Manifest.Name, app.Manifest.Block))
 		for _, ex := range app.Manifest.Recipe.Run {
 			cmd := PrepareExecutor(p.dir, ex, filepath.Join("src", app.Manifest.Name))
 			err := cmd.Run()

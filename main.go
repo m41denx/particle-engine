@@ -3,10 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/m41denx/particle/particle"
-	"github.com/m41denx/particle/utils"
 	"os"
 )
+
+const v = "0.3"
 
 func init() {
 	particle.ParticleCache = make(map[string]*particle.Particle)
@@ -23,8 +25,9 @@ func main() {
 		}
 	}()
 	flag.Parse()
-
 	PrepareStorage()
+
+	fmt.Println(color.CyanString("Particle builder v."+v), "(c) M41den")
 
 	switch flag.Arg(0) {
 	case "init":
@@ -37,6 +40,12 @@ func main() {
 	case "publish":
 		break
 	default:
-		utils.Log(flag.Arg(0))
+		help()
 	}
+}
+
+func help() {
+	fmt.Println(`Usage:
+	particle <init/prepare/build/...> <path>
+`)
 }

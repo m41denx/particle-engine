@@ -2,7 +2,6 @@ package particle
 
 import (
 	"encoding/json"
-	"github.com/alessio/shellescape"
 	"github.com/m41denx/particle/utils"
 	"os"
 	"os/exec"
@@ -54,9 +53,9 @@ func PrepareExecutor(dir string, command string, module string) *exec.Cmd {
 	}
 	env := os.Environ()
 	for k, v := range MetaCache {
-		env = append(env, k+"="+shellescape.Quote(v))
+		env = append(env, k+"="+v)
 	}
-	env = append(env, "MOD="+shellescape.Quote(module))
+	env = append(env, "MOD="+module)
 	os.Setenv("MOD", module)
 	for i, k := range c {
 		c[i] = os.ExpandEnv(k)
