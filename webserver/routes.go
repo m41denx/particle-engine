@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/basicauth"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/m41denx/particle/utils/fs"
 	"github.com/m41denx/particle/webserver/db"
 	"gorm.io/driver/mysql"
@@ -22,14 +24,30 @@ func StartServer(host string, port uint) error {
 		DisableStartupMessage: true,
 		AppName:               "Particle Repository",
 	})
-	app.Get("/repo/:author/:name\\@:version/:arch.json",
+	app.Use(logger.New())
+	app.Use(basicauth.New(basicauth.Config{
+		Users: nil,
+		Realm: "Particle Repository",
+		Authorizer: func(uname string, passwd string) bool {
+			return true
+		},
+		ContextUsername: "username",
+		ContextPassword: "password",
+	}))
+	app.Get("/", func(c *fiber.Ctx) error {
+		return nil
+	})
+	app.Get("/repo/:author/:name\\@:version/:arch",
 		func(c *fiber.Ctx) error {
 			return c.SendString(fmt.Sprintf("%+v", c.AllParams()))
 		})
+	app.Post("/upload/:name\\@:version/:arch", nil)
+	app.Get("/layers/:layerid", nil)
+	app.Get("/user", apiUser)
 
 	app.Group("/upload/")
 
-	fmt.Println(color.CyanString("Starting Particle Repository on http://%s:%d", host, port))
+	fmt.Println(color.CyanString("Starting Particle Repository on http://%s:%d\n[Ctrl+C to stop]", host, port))
 	return app.Listen(fmt.Sprintf("%s:%d", host, port))
 }
 

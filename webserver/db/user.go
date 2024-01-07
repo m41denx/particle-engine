@@ -4,10 +4,10 @@ import gorm "github.com/cradio/gormx"
 
 type User struct {
 	gorm.Model
-	Username       string
-	Token          string
-	MaxAllowedSize int64 //bytes
-	IsAdmin        bool
+	Username       string `json:"username"`
+	Token          string `json:"-"`
+	MaxAllowedSize uint   `json:"max_allowed_size"` //bytes
+	IsAdmin        bool   `json:"-"`
 }
 
 func (u *User) TableName() string {

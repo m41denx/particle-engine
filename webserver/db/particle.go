@@ -6,12 +6,13 @@ type Particle struct {
 	gorm.Model
 	Name        string
 	Author      string
-	UID         int64
+	UID         uint
 	Arch        string
+	LayerID     string
 	Version     string
 	Description string
 	Recipe      string
-	Size        int64 // bytes
+	Size        uint // bytes
 	IsPrivate   bool
 	IsUnlisted  bool
 }

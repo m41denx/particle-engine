@@ -17,9 +17,9 @@
 ## API
 
 ### Fetch Particle Manifest
-> URL: `GET SERVER_URL/repo/:author/:name@version/:archb.json`
+> URL: `GET SERVER_URL/repo/:author/:name@version/:archb`
 >
-> EXAMPLE: `GET https://particles.fruitspace.one/repo/m41den/thebox@latest/w64.json`
+> EXAMPLE: `GET https://particles.fruitspace.one/repo/m41den/thebox@latest/w64`
 
 ### Push Particle Manifest
 > URL: `POST uname:token@SERVER_URL/upload/:name@version/:archb`
@@ -44,3 +44,4 @@
 > URL: `GET uname:token@SERVER_URL/user`
 > 
 > EXAMPLE: `GET https://m41den:mytoken@particles.fruitspace.one/user`
+
