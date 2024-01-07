@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/fatih/color"
 	"github.com/m41denx/particle/particle"
 	"github.com/m41denx/particle/utils"
 	"os"
@@ -33,10 +32,12 @@ func main() {
 		}
 	}()
 	utils.PrepareStorage()
-	fmt.Println(color.CyanString("Particle Engine v"+v), "(c) M41den")
 
 	subcommands := []Command{
 		NewCmdInit(),
+		NewCmdPrepare(),
+		NewCmdBuild(),
+		NewCmdVersion(),
 	}
 
 	if len(os.Args) < 2 {
@@ -59,22 +60,6 @@ func main() {
 		}
 	}
 	help()
-
-	//switch flag.Arg(0) {
-	//case "init":
-	//	CmdInit(flag.Arg(1))
-	//case "prepare":
-	//	CmdPrepare(flag.Arg(1))
-	//case "build":
-	//	CmdBuild(flag.Arg(1))
-	//case "auth":
-	//case "publish":
-	//	break
-	//case "serve":
-	//	webserver.StartServer()
-	//default:
-	//	help()
-	//}
 }
 
 func help() {

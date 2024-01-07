@@ -2,9 +2,7 @@ package utils
 
 import (
 	"crypto/md5"
-	"encoding/json"
 	"fmt"
-	"github.com/m41denx/particle/structs"
 	"io"
 	"os"
 	"path"
@@ -82,21 +80,4 @@ func PrepareStorage() string {
 	os.MkdirAll(path.Join(pc, "layers"), 0750)
 	os.MkdirAll(path.Join(pc, "repo"), 0750)
 	return pc
-}
-
-func ParticleInit(pathname string) {
-	if pathname == "" {
-		pathname = "."
-	}
-	os.MkdirAll(pathname, 0750)
-	os.Chdir(pathname)
-	manifest, _ := json.MarshalIndent(structs.NewManifest(), "", "\t")
-	os.WriteFile("particle.json", manifest, 0750)
-	os.MkdirAll("out", 0750)
-	os.MkdirAll("bin", 0750)
-	os.MkdirAll("dist", 0750)
-	os.MkdirAll("src", 0750)
-	os.MkdirAll("engines", 0750)
-	os.WriteFile(".gitignore", []byte(GitIgnore), 0750)
-	Log("Init done at", pathname)
 }

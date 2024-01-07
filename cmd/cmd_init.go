@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/fatih/color"
-	"github.com/m41denx/particle/utils"
+	"github.com/m41denx/particle/particle"
 )
 
 func NewCmdInit() *CmdInit {
@@ -52,6 +52,6 @@ func (cmd *CmdInit) Init(args []string) (err error) {
 }
 
 func (cmd *CmdInit) Run() error {
-	utils.ParticleInit(cmd.dir)
+	particle.ParticleInit(cmd.dir, cmd.name)
 	return nil
 }

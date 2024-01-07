@@ -28,7 +28,7 @@ echo -e "${GREEN}Building binaries...${GRAY}"
 mkdir -p ./build
 for arch in "${!dists[@]}"; do
   echo -e "    ${BLUE}Building for ${arch}${NC}"
-  GOOS=${dists[$arch]%%/*} GOARCH=${dists[$arch]##*/} go build -ldflags="-s -w -X cmd.BuildTag=$(git rev-parse --short HEAD) -X cmd.BuildDate=$(date '+%Y-%m-%d_%H:%M')" -o ./build/particle-$arch ./cmd/...
+  GOOS=${dists[$arch]%%/*} GOARCH=${dists[$arch]##*/} go build -ldflags="-s -w -X main.BuildTag=$(git rev-parse --short HEAD) -X main.BuildDate=$(date '+%Y-%m-%dT%H:%M')" -o ./build/particle-$arch ./cmd/...
 done
 
 echo -e "${GREEN}Done.${NC}"

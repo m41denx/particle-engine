@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/fatih/color"
+)
 
 func NewCmdVersion() *CmdVersion {
 	return &CmdVersion{}
@@ -17,7 +20,13 @@ func (cmd *CmdVersion) Help() string {
 	return ""
 }
 
+func (cmd *CmdVersion) Init(args []string) (err error) {
+	return
+}
+
 func (cmd *CmdVersion) Run() error {
-	fmt.Println("Particle Engine v0.4 (c) M41den")
+	fmt.Println(color.CyanString("✨ Particle Engine v"+v), "(c) M41den")
+	fmt.Println(color.CyanString("Build Tag:\t"), BuildTag)
+	fmt.Println(color.CyanString("Build Date:\t"), BuildDate)
 	return nil
 }
