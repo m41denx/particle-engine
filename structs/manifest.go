@@ -5,9 +5,9 @@ import (
 	"os"
 )
 
-//const DefaultRepo = "https://raw.githubusercontent.com/m41denx/particle-repo/master/"
+const DefaultRepo = "https://raw.githubusercontent.com/m41denx/particle-repo/master/"
 
-const DefaultRepo = "http://127.0.0.1:8000/"
+//const DefaultRepo = "http://127.0.0.1:8000/"
 
 type Manifest struct {
 	Name        string            `json:"name"`

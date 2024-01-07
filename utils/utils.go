@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"runtime"
 )
 
 func CalcFileHash(dp string) (string, error) {
@@ -39,4 +40,29 @@ func LDir(srcDir string, prefix string) []string {
 		}
 	}
 	return dlist
+}
+
+func GetArchString() string {
+	var arch string
+	switch runtime.GOOS {
+	case "windows":
+		arch += "w"
+	case "linux":
+		arch += "l"
+	case "darwin":
+		arch += "d"
+	default:
+		return "unsupported"
+	}
+	switch runtime.GOARCH {
+	case "amd64":
+		arch += "64"
+	case "386":
+		arch += "32"
+	case "arm64":
+		arch += "64a"
+	default:
+		return "unsupported"
+	}
+	return arch
 }

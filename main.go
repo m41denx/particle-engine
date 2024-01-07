@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/m41denx/particle/particle"
+	"github.com/m41denx/particle/webserver"
 	"os"
 )
 
-const v = "0.3"
+const v = "0.4"
 
 func init() {
 	particle.ParticleCache = make(map[string]*particle.Particle)
@@ -39,6 +40,8 @@ func main() {
 	case "auth":
 	case "publish":
 		break
+	case "serve":
+		webserver.StartServer()
 	default:
 		help()
 	}

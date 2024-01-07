@@ -3,6 +3,7 @@ package particle
 import (
 	"encoding/json"
 	"github.com/m41denx/particle/utils"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -46,20 +47,22 @@ func PrepareExecutor(dir string, command string, module string) *exec.Cmd {
 	c := strings.Fields(command)
 	comd := filepath.Join(dir, "bin", c[0]+utils.SymlinkPostfix)
 	info, err := os.Stat(comd)
-	if err != nil || info.IsDir() {
-		comd = c[0]
-	} else {
-		comd, _ = filepath.Abs(comd)
-	}
 	env := os.Environ()
 	for k, v := range MetaCache {
 		env = append(env, k+"="+v)
+		os.Setenv(k, v)
 	}
 	env = append(env, "MOD="+module)
 	os.Setenv("MOD", module)
 	for i, k := range c {
 		c[i] = os.ExpandEnv(k)
 	}
+	if err != nil || info.IsDir() {
+		comd = c[0]
+	} else {
+		comd, _ = filepath.Abs(comd)
+	}
+	log.Println("$>", comd, c[1:])
 	cmd := exec.Command(comd, c[1:]...)
 	cmd.Dir = dir
 	cmd.Env = env
