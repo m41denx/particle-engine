@@ -39,3 +39,8 @@
 > URL: `GET SERVER_URL/layers/:layerid`
 >
 > EXAMPLE: `GET https://particles.fruitspace.one/layers/babcae0de0`
+
+### Auth user
+> URL: `GET uname:token@SERVER_URL/user`
+> 
+> EXAMPLE: `GET https://m41den:mytoken@particles.fruitspace.one/user`
