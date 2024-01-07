@@ -4,7 +4,9 @@ go 1.20
 
 require (
 	github.com/bodgit/sevenzip v1.4.3
+	github.com/cradio/gormx v1.25.5
 	github.com/fatih/color v1.15.0
+	github.com/gofiber/fiber/v2 v2.51.0
 	github.com/mattn/go-isatty v0.0.20
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 )
@@ -13,10 +15,6 @@ require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/bodgit/plumbing v1.3.0 // indirect
 	github.com/bodgit/windows v1.0.1 // indirect
-	github.com/cradio/gorm_mysql v0.0.0-20230522150626-7133a0060a10 // indirect
-	github.com/cradio/gormx v1.25.5 // indirect
-	github.com/go-sql-driver/mysql v1.7.0 // indirect
-	github.com/gofiber/fiber/v2 v2.51.0 // indirect
 	github.com/google/uuid v1.4.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
