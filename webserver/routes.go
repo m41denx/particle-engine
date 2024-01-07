@@ -13,6 +13,8 @@ func StartServer() {
 			return c.SendString(fmt.Sprintf("%+v", c.AllParams()))
 		})
 
+	app.Group("/upload/")
+
 	app.Listen(":3000")
 }
 

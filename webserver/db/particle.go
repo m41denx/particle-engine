@@ -12,6 +12,7 @@ type Particle struct {
 	Description string
 	Recipe      string
 	Size        int64 // bytes
+	IsPrivate   bool
 }
 
 func (p *Particle) TableName() string {
