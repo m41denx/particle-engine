@@ -6,7 +6,6 @@ import (
 	"github.com/m41denx/particle/structs"
 	"github.com/m41denx/particle/webserver/db"
 	"log"
-	"path"
 )
 
 func apiFetchManifest(c *fiber.Ctx) (err error) {
@@ -66,7 +65,7 @@ func apiFetchManifest(c *fiber.Ctx) (err error) {
 
 func apiPullLayer(c *fiber.Ctx) error {
 	// No auth
-	layerPath := path.Join("/particles/", c.Params("layerid"))
+	layerPath := c.Params("layerid")
 	if LayerDomain != "" {
 		return c.Redirect(LayerDomain+layerPath, 301)
 	}

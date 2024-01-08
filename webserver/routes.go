@@ -30,7 +30,7 @@ func StartServer(host string, port uint) error {
 	app.Use(fiberrecover.New())
 	app.Use(basicauth.New(basicauth.Config{
 		Next: func(c *fiber.Ctx) bool {
-			return c.Path() == "/"
+			return c.Path() == "/" || strings.HasPrefix(c.Path(), "/layers/")
 		},
 		Users: nil,
 		Realm: "Particle Repository",
