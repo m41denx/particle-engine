@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
 )
 
@@ -75,9 +76,9 @@ func GetArchString() string {
 
 func PrepareStorage() string {
 	home, _ := os.UserCacheDir()
-	pc := path.Join(home, "particle_cache")
+	pc := filepath.Join(home, "particle_cache")
 	os.MkdirAll(pc, 0750)
-	os.MkdirAll(path.Join(pc, "layers"), 0750)
-	os.MkdirAll(path.Join(pc, "repo"), 0750)
+	os.MkdirAll(filepath.Join(pc, "layers"), 0750)
+	os.MkdirAll(filepath.Join(pc, "repo"), 0750)
 	return pc
 }

@@ -14,6 +14,15 @@ func (l *LocalFS) GetFile(path string) ([]byte, error) {
 	return os.ReadFile(filepath.Join(l.prefix, path))
 }
 
+func (l *LocalFS) GetFileStream(path string) (io.ReadCloser, int, error) {
+	f, err := os.Open(filepath.Join(l.prefix, path))
+	if err != nil {
+		return nil, 0, err
+	}
+	s, _ := f.Stat()
+	return f, int(s.Size()), nil
+}
+
 func (l *LocalFS) PutFile(path string, data []byte) error {
 	return os.WriteFile(filepath.Join(l.prefix, path), data, 0644)
 }

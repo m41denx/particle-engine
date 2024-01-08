@@ -40,6 +40,26 @@ func (s3fs *S3FS) GetFile(path string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+func (s3fs *S3FS) GetFileStream(path string) (io.ReadCloser, int, error) {
+	creds := credentials.NewStaticCredentials(s3fs.AccessKey, s3fs.SecretKey, "")
+	cfg := aws.NewConfig().WithEndpoint(s3fs.Endpoint).WithRegion(s3fs.Region).WithCredentials(creds).WithS3ForcePathStyle(true)
+	sess, err := session.NewSession(cfg)
+	if err != nil {
+		return nil, 0, err
+	}
+	req, out := s3.New(sess).GetObjectRequest(&s3.GetObjectInput{
+		Bucket: aws.String(s3fs.Bucket),
+		Key:    aws.String(path),
+	})
+	err = req.Send()
+	if err != nil {
+		return nil, 0, err
+	}
+	sz := int(aws.Int64Value(out.ContentLength))
+
+	return out.Body, sz, nil
+}
+
 func (s3fs *S3FS) PutFile(path string, data []byte) error {
 	creds := credentials.NewStaticCredentials(s3fs.AccessKey, s3fs.SecretKey, "")
 	cfg := aws.NewConfig().WithEndpoint(s3fs.Endpoint).WithRegion(s3fs.Region).WithCredentials(creds).WithS3ForcePathStyle(true)
