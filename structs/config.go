@@ -21,14 +21,14 @@ func NewConfig() *Config {
 	}
 }
 
-func LoadConfig(path string) (Config, error) {
+func LoadConfig(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return Config{}, err
+		return &Config{}, err
 	}
 	var c Config
 	err = json.Unmarshal(data, &c)
-	return c, err
+	return &c, err
 }
 
 func (c *Config) SaveTo(dest string) {
@@ -53,5 +53,5 @@ func (c *Config) GenerateCredsForURL(repo string) (string, error) {
 		return "", err
 	}
 	link.User = url.UserPassword(c.GetCredsForRepo(link.Host))
-	return link.String(), err
+	return link.String() + "/", err
 }

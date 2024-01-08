@@ -49,6 +49,9 @@ func apiUploadManifest(c *fiber.Ctx) error {
 		})
 	}
 
+	manifest.Author = user.Username
+	manifest.Name = name + "@" + version
+
 	mb, err := json.Marshal(manifest)
 	if err != nil {
 		return c.Status(500).JSON(ErrorResponse{
@@ -57,7 +60,7 @@ func apiUploadManifest(c *fiber.Ctx) error {
 	}
 
 	particle := db.Particle{
-		Name:        manifest.Name,
+		Name:        name,
 		Author:      user.Username,
 		UID:         user.ID,
 		Arch:        arch,

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/m41denx/particle/particle"
+	"github.com/m41denx/particle/structs"
 	"github.com/m41denx/particle/utils"
 	"os"
 	"path/filepath"
@@ -13,6 +14,7 @@ const v = "0.4"
 var binname string
 var BuildTag string
 var BuildDate string
+var ldir string
 
 func init() {
 	particle.ParticleCache = make(map[string]*particle.Particle)
@@ -21,6 +23,8 @@ func init() {
 	particle.MetaCache = make(map[string]string)
 
 	binname = filepath.Base(os.Args[0])
+
+	ldir = utils.PrepareStorage()
 }
 
 func main() {
@@ -31,12 +35,17 @@ func main() {
 			os.Exit(-1)
 		}
 	}()
-	utils.PrepareStorage()
+	var err error
+	particle.Config, err = structs.LoadConfig(filepath.Join(ldir, "config.json"))
+	if err != nil {
+		particle.Config.SaveTo(filepath.Join(ldir, "config.json"))
+	}
 
 	subcommands := []Command{
 		NewCmdInit(),
 		NewCmdPrepare(),
 		NewCmdBuild(),
+		NewCmdExport(),
 
 		NewCmdServe(),
 		NewCmdVersion(),
