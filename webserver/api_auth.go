@@ -3,7 +3,6 @@ package webserver
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/m41denx/particle/webserver/db"
-	"log"
 )
 
 func auth(c *fiber.Ctx) (user db.User, err error) {
@@ -22,9 +21,6 @@ func auth(c *fiber.Ctx) (user db.User, err error) {
 
 func apiUser(c *fiber.Ctx) error {
 	user, err := auth(c)
-	log.Println(user, err)
-	log.Println(c.Locals("username"))
-	log.Println(c.Locals("password"))
 	if user.ID == 0 || err != nil {
 		return c.Status(403).JSON(ErrorResponse{
 			Message: "Invalid credentials",

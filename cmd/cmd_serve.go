@@ -23,6 +23,7 @@ func NewCmdServe() *CmdServe {
 	cmd.fs.StringVar(&cmd.fs3Bucket, "fs3-bucket", "particles", "S3 bucket")
 	cmd.fs.StringVar(&cmd.fs3Endpoint, "fs3-endpoint", "https://s3.amazonaws.com", "S3 endpoint")
 	cmd.fs.StringVar(&cmd.fs3Domain, "fs3-domain", "https://particles.fruitspace.one", "S3 layers domain")
+	cmd.fs.StringVar(&cmd.fs3Prefix, "fs3-prefix", "/layers", "S3 prefix")
 
 	return cmd
 }
@@ -40,6 +41,7 @@ type CmdServe struct {
 	fs3Bucket    string // S3 bucket
 	fs3Endpoint  string // S3 endpoint
 	fs3Domain    string // S3 domain
+	fs3Prefix    string // S3 prefix
 }
 
 func (cmd *CmdServe) Name() string {
@@ -83,6 +85,7 @@ func (cmd *CmdServe) Run() (err error) {
 		"region":     cmd.fs3Region,
 		"bucket":     cmd.fs3Bucket,
 		"domain":     cmd.fs3Domain,
+		"prefix":     cmd.fs3Prefix,
 	})
 	if err != nil {
 		return

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"io"
+	"path/filepath"
 )
 
 type S3FS struct {
@@ -18,9 +19,11 @@ type S3FS struct {
 
 	Region string
 	Bucket string
+	Prefix string
 }
 
 func (s3fs *S3FS) GetFile(path string) ([]byte, error) {
+	path = filepath.Join(s3fs.Prefix, path)
 	creds := credentials.NewStaticCredentials(s3fs.AccessKey, s3fs.SecretKey, "")
 	cfg := aws.NewConfig().WithEndpoint(s3fs.Endpoint).WithRegion(s3fs.Region).WithCredentials(creds).WithS3ForcePathStyle(true)
 	sess, err := session.NewSession(cfg)
@@ -41,6 +44,7 @@ func (s3fs *S3FS) GetFile(path string) ([]byte, error) {
 }
 
 func (s3fs *S3FS) GetFileStream(path string) (io.ReadCloser, int, error) {
+	path = filepath.Join(s3fs.Prefix, path)
 	creds := credentials.NewStaticCredentials(s3fs.AccessKey, s3fs.SecretKey, "")
 	cfg := aws.NewConfig().WithEndpoint(s3fs.Endpoint).WithRegion(s3fs.Region).WithCredentials(creds).WithS3ForcePathStyle(true)
 	sess, err := session.NewSession(cfg)
@@ -61,6 +65,7 @@ func (s3fs *S3FS) GetFileStream(path string) (io.ReadCloser, int, error) {
 }
 
 func (s3fs *S3FS) PutFile(path string, data []byte) error {
+	path = filepath.Join(s3fs.Prefix, path)
 	creds := credentials.NewStaticCredentials(s3fs.AccessKey, s3fs.SecretKey, "")
 	cfg := aws.NewConfig().WithEndpoint(s3fs.Endpoint).WithRegion(s3fs.Region).WithCredentials(creds).WithS3ForcePathStyle(true)
 	sess, err := session.NewSession(cfg)
@@ -81,6 +86,7 @@ func (s3fs *S3FS) PutFile(path string, data []byte) error {
 }
 
 func (s3fs *S3FS) PutFileStream(path string, data io.ReadCloser) error {
+	path = filepath.Join(s3fs.Prefix, path)
 	creds := credentials.NewStaticCredentials(s3fs.AccessKey, s3fs.SecretKey, "")
 	cfg := aws.NewConfig().WithEndpoint(s3fs.Endpoint).WithRegion(s3fs.Region).WithCredentials(creds).WithS3ForcePathStyle(true)
 	sess, err := session.NewSession(cfg)
@@ -101,6 +107,7 @@ func (s3fs *S3FS) PutFileStream(path string, data io.ReadCloser) error {
 }
 
 func (s3fs *S3FS) DeleteFile(path string) error {
+	path = filepath.Join(s3fs.Prefix, path)
 	creds := credentials.NewStaticCredentials(s3fs.AccessKey, s3fs.SecretKey, "")
 	cfg := aws.NewConfig().WithEndpoint(s3fs.Endpoint).WithRegion(s3fs.Region).WithCredentials(creds).WithS3ForcePathStyle(true)
 	sess, err := session.NewSession(cfg)
@@ -120,6 +127,7 @@ func (s3fs *S3FS) DeleteFile(path string) error {
 }
 
 func (s3fs *S3FS) DeleteFolder(path string) error {
+	path = filepath.Join(s3fs.Prefix, path)
 	creds := credentials.NewStaticCredentials(s3fs.AccessKey, s3fs.SecretKey, "")
 	cfg := aws.NewConfig().WithEndpoint(s3fs.Endpoint).WithRegion(s3fs.Region).WithCredentials(creds).WithS3ForcePathStyle(true)
 	sess, err := session.NewSession(cfg)
@@ -147,6 +155,7 @@ func (s3fs *S3FS) DeleteList(objects []string) error {
 }
 
 func (s3fs *S3FS) DeleteFolderAsList(path string) error {
+	path = filepath.Join(s3fs.Prefix, path)
 	list, err := s3fs.ListFolder(path)
 	if err != nil {
 		return err
@@ -156,6 +165,7 @@ func (s3fs *S3FS) DeleteFolderAsList(path string) error {
 }
 
 func (s3fs *S3FS) ListFolder(path string) ([]string, error) {
+	path = filepath.Join(s3fs.Prefix, path)
 	creds := credentials.NewStaticCredentials(s3fs.AccessKey, s3fs.SecretKey, "")
 	cfg := aws.NewConfig().WithEndpoint(s3fs.Endpoint).WithRegion(s3fs.Region).WithCredentials(creds).WithS3ForcePathStyle(true)
 	sess, err := session.NewSession(cfg)
@@ -185,5 +195,6 @@ func NewS3FS(Props map[string]string) *S3FS {
 		SecretKey: Props["secret"],
 		Region:    Props["region"],
 		Bucket:    Props["bucket"],
+		Prefix:    Props["prefix"],
 	}
 }

@@ -27,7 +27,7 @@ func apiFetchManifest(c *fiber.Ctx) (err error) {
 			Name:   c.Params("name"),
 			Author: c.Params("author"),
 			Arch:   c.Params("arch"),
-		}).Order("UpdatedAt DESC").First(&particle).Error
+		}).Order("updated_at DESC").First(&particle).Error
 	} else {
 		// Strict verison
 		err = DB.Where(db.Particle{
