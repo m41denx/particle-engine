@@ -406,7 +406,11 @@ func (p *Particle) compareIntegrity() {
 }
 
 func (p *Particle) fetchManifest(pkg string) (*structs.Manifest, error) {
-	r, err := http.Get(p.Manifest.GetServer() + path.Join("repo", pkg, utils.GetArchString()+".json"))
+	pref, err := Config.GenerateCredsForURL(p.Manifest.GetServer())
+	if err != nil {
+		return nil, err
+	}
+	r, err := http.Get(pref + path.Join("repo", pkg, utils.GetArchString()))
 	if err != nil {
 		return nil, err
 	}
