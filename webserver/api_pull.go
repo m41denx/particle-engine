@@ -35,7 +35,7 @@ func apiFetchManifest(c *fiber.Ctx) (err error) {
 			Author:  c.Params("author"),
 			Version: ver,
 			Arch:    c.Params("arch"),
-		}).First(&particle).Error
+		}).Order("updated_at DESC").First(&particle).Error
 	}
 	if err != nil {
 		return c.Status(404).JSON(ErrorResponse{
