@@ -26,15 +26,18 @@ func apiUser(c *fiber.Ctx) error {
 			Message: "Invalid credentials",
 		})
 	}
-	var sz uint
-	err = DB.Model(db.Particle{}).Where(db.Particle{UID: user.ID}).Select("sum(size) as sz").Find(&sz).Error
+	var sz *uint
+	err = DB.Model(db.Particle{}).Where(db.Particle{UID: user.ID}).Select("sum(size)").Scan(&sz).Error
 	if err != nil {
 		return c.Status(500).JSON(ErrorResponse{
 			Message: err.Error(),
 		})
 	}
+	if sz == nil {
+		sz = new(uint)
+	}
 	return c.JSON(UserResponse{
 		User:     user,
-		UsedSize: sz,
+		UsedSize: *sz,
 	})
 }

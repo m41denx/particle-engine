@@ -12,9 +12,9 @@ type Particle struct {
 	Version     string
 	Description string
 	Recipe      string
-	Size        uint // bytes
-	IsPrivate   bool
-	IsUnlisted  bool
+	Size        uint `gorm:"default:0"` // bytes
+	IsPrivate   bool `gorm:"default:0"`
+	IsUnlisted  bool `gorm:"default:0"`
 }
 
 func (p *Particle) TableName() string {

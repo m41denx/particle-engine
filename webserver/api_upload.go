@@ -97,10 +97,13 @@ func apiUploadLayer(c *fiber.Ctx) error {
 		})
 	}
 
-	var sz uint
-	DB.Where(db.Particle{UID: user.ID}).Select("sum(size) as sz").Find(&sz)
+	var sz *uint
+	DB.Where(db.Particle{UID: user.ID}).Select("sum(size)").Scan(&sz)
 
-	maxSz := user.MaxAllowedSize - sz // To check if user is allowed to upload such large file
+	if sz == nil {
+		sz = new(uint)
+	}
+	maxSz := user.MaxAllowedSize - *sz // To check if user is allowed to upload such large file
 
 	mpfd, err := c.MultipartForm()
 	layers := mpfd.File["layer"]

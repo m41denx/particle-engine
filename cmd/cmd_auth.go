@@ -80,7 +80,7 @@ func (cmd *CmdAuth) Run() error {
 	}
 	var user structs.UserResponse
 	_ = json.Unmarshal(b, &user)
-	fmt.Println(color.CyanString("Authenticated as: "), user.Username)
+	fmt.Println(color.CyanString("Authenticated as:"), user.Username)
 	fmt.Println(color.CyanString("Used space at %s:", cmd.url),
 		fmt.Sprintf("%.2fMB/%.2fMB", float64(user.UsedSize)/1024/1024, float64(user.MaxAllowedSize)/1024/1024))
 

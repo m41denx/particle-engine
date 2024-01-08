@@ -9,7 +9,7 @@ import (
 
 //const DefaultRepo = "http://127.0.0.1:8000/"
 
-const DefaultRepo = "https://particles.fruitspace.one"
+const DefaultRepo = "http://particles.fruitspace.one"
 
 type Manifest struct {
 	Name        string            `json:"name"`

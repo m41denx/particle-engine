@@ -21,7 +21,7 @@ func StartServer(host string, port uint) error {
 	app := fiber.New(fiber.Config{
 		ServerHeader:          "Particle Repository",
 		ETag:                  false,
-		BodyLimit:             int(bl), // 2GB
+		BodyLimit:             bl, // 2GB
 		DisableKeepalive:      false,
 		DisableStartupMessage: true,
 		AppName:               "Particle Repository",
@@ -29,6 +29,9 @@ func StartServer(host string, port uint) error {
 	app.Use(logger.New())
 	app.Use(fiberrecover.New())
 	app.Use(basicauth.New(basicauth.Config{
+		Next: func(c *fiber.Ctx) bool {
+			return c.Path() == "/"
+		},
 		Users: nil,
 		Realm: "Particle Repository",
 		Authorizer: func(uname string, passwd string) bool {
