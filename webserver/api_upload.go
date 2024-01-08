@@ -11,15 +11,12 @@ import (
 
 func apiUpload(c *fiber.Ctx) error {
 	c.Accepts("multipart/form-data", "application/json")
-	switch strings.ToLower(string(c.Request().Header.Peek("Content-Type"))) {
+	s := strings.ToLower(string(c.Request().Header.Peek("Content-Type")))
+	switch s {
 	case "application/json":
 		return apiUploadManifest(c)
-	case "multipart/form-data":
-		return apiUploadLayer(c)
 	default:
-		return c.Status(400).JSON(ErrorResponse{
-			Message: "Invalid content type",
-		})
+		return apiUploadLayer(c)
 	}
 }
 
@@ -103,7 +100,7 @@ func apiUploadLayer(c *fiber.Ctx) error {
 	var sz uint
 	DB.Where(db.Particle{UID: user.ID}).Select("sum(size) as sz").Find(&sz)
 
-	max_sz := user.MaxAllowedSize - sz // To check if user is allowed to upload such large file
+	maxSz := user.MaxAllowedSize - sz // To check if user is allowed to upload such large file
 
 	mpfd, err := c.MultipartForm()
 	layers := mpfd.File["layer"]
@@ -114,14 +111,20 @@ func apiUploadLayer(c *fiber.Ctx) error {
 	}
 	layer := layers[0]
 
-	if uint(layer.Size) > max_sz {
+	if uint(layer.Size) > maxSz {
 		return c.Status(400).JSON(ErrorResponse{
 			Message: fmt.Sprintf("You don't have available space for that: %.2f MB of %.2f MB",
-				float64(layer.Size)/1024/1024, float64(max_sz)/1024/1024),
+				float64(layer.Size)/1024/1024, float64(maxSz)/1024/1024),
 		})
 	}
 
 	layerID := layer.Filename
+	ld, err := layer.Open()
+	if err != nil {
+		return c.Status(500).JSON(ErrorResponse{
+			Message: err.Error(),
+		})
+	}
 
 	var particle db.Particle
 	err = DB.Where(db.Particle{
@@ -145,5 +148,14 @@ func apiUploadLayer(c *fiber.Ctx) error {
 			Message: err.Error(),
 		})
 	}
+
+	err = FS.PutFileStream(layerID, ld)
+
+	if err != nil {
+		return c.Status(500).JSON(ErrorResponse{
+			Message: err.Error(),
+		})
+	}
+
 	return nil
 }

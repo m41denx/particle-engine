@@ -17,7 +17,8 @@ func NewCmdAuth() *CmdAuth {
 		fs: flag.NewFlagSet("auth", flag.ExitOnError),
 	}
 
-	cmd.fs.StringVar(&cmd.uname, "u", "", "Username")
+	cmd.fs.StringVar(&cmd.url, "u", structs.DefaultRepo, "Repository URL")
+	cmd.fs.StringVar(&cmd.uname, "a", "", "Username")
 	cmd.fs.StringVar(&cmd.token, "t", "", "Token")
 
 	return cmd
@@ -40,9 +41,9 @@ Usage: ` + color.CyanString(binname+" auth <url> [args]") + `
 
 	This command authenticates with <url> repository server.
 
-	Authentication example: ` + binname + ` auth https://particles.fruitspace.one -u user -t token
+	Authentication example: ` + binname + ` auth -a user -t token
 
-	User info example: ` + binname + ` auth https://particles.fruitspace.one
+	User info example: ` + binname + ` auth -u https://particles.fruitspace.one
 
 	Please see the individual subcommand help for detailed usage information.
 `
@@ -50,14 +51,6 @@ Usage: ` + color.CyanString(binname+" auth <url> [args]") + `
 
 func (cmd *CmdAuth) Init(args []string) (err error) {
 	err = cmd.fs.Parse(args)
-	if err != nil {
-		return
-	}
-	if cmd.fs.NArg() > 0 {
-		cmd.url = cmd.fs.Arg(0)
-	} else {
-		return fmt.Errorf("url is required")
-	}
 	return
 }
 
@@ -68,11 +61,12 @@ func (cmd *CmdAuth) Run() error {
 			Token:    cmd.token,
 		})
 	}
-	creds, err := particle.Config.GenerateCredsForURL(cmd.url)
+	r, _ := http.NewRequest("GET", cmd.url+"/user", nil)
+	creds, err := particle.Config.GenerateRequestURL(r, cmd.url)
 	if err != nil {
 		return err
 	}
-	data, err := http.Get(creds + "user")
+	data, err := http.DefaultClient.Do(creds)
 	if err != nil {
 		return err
 	}
@@ -85,9 +79,9 @@ func (cmd *CmdAuth) Run() error {
 		return fmt.Errorf("Auth Failed:\n%s", string(b))
 	}
 	var user structs.UserResponse
-	err = json.Unmarshal(b, &user)
-	fmt.Println(color.CyanString("Authenticated as: %s"), user.Username)
-	fmt.Println(color.CyanString("Available space at %s: %s"), cmd.url,
+	_ = json.Unmarshal(b, &user)
+	fmt.Println(color.CyanString("Authenticated as: "), user.Username)
+	fmt.Println(color.CyanString("Used space at %s:", cmd.url),
 		fmt.Sprintf("%.2fMB/%.2fMB", float64(user.UsedSize)/1024/1024, float64(user.MaxAllowedSize)/1024/1024))
 
 	particle.Config.SaveTo(filepath.Join(ldir, "config.json"))

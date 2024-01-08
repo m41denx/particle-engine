@@ -46,8 +46,10 @@ func main() {
 		NewCmdPrepare(),
 		NewCmdBuild(),
 		NewCmdExport(),
-
+		NewCmdAuth(),
+		NewCmdPublish(),
 		NewCmdServe(),
+
 		NewCmdVersion(),
 	}
 
@@ -87,8 +89,8 @@ Commands:
 	serve		Starts local repository webserver (see help)
 
 Other commands:
-	pull 		Pulls particle and it's dependencies from remote repository without building it
-	local		Manages local particles
+	[unsupported] pull 		Pulls particle and it's dependencies from remote repository without building it
+	[unsupported] local		Manages local particles]
 	version		Prints version
 `)
 }

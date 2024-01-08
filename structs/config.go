@@ -1,7 +1,10 @@
 package structs
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 )
@@ -24,10 +27,13 @@ func NewConfig() *Config {
 func LoadConfig(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return &Config{}, err
+		return NewConfig(), err
 	}
 	var c Config
 	err = json.Unmarshal(data, &c)
+	if c.Repositories == nil {
+		c.Repositories = make(map[string]RepoConfig)
+	}
 	return &c, err
 }
 
@@ -37,7 +43,8 @@ func (c *Config) SaveTo(dest string) {
 }
 
 func (c *Config) AddRepo(repo string, config RepoConfig) {
-	c.Repositories[repo] = config
+	link, _ := url.Parse(repo)
+	c.Repositories[link.Host] = config
 }
 
 func (c *Config) GetCredsForRepo(repo string) (string, string) {
@@ -47,11 +54,14 @@ func (c *Config) GetCredsForRepo(repo string) (string, string) {
 	return "anonymous", ""
 }
 
-func (c *Config) GenerateCredsForURL(repo string) (string, error) {
+func (c *Config) GenerateRequestURL(req *http.Request, repo string) (*http.Request, error) {
 	link, err := url.Parse(repo)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	link.User = url.UserPassword(c.GetCredsForRepo(link.Host))
-	return link.String() + "/", err
+	uname, passwd := c.GetCredsForRepo(link.Host)
+	req.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString(
+		[]byte(fmt.Sprintf("%s:%s", uname, passwd))),
+	)
+	return req, err
 }

@@ -92,9 +92,9 @@ func (l *Layer) CreateLayer(from string, to string) (err error) {
 
 func (l *Layer) Download(id string) {
 	numcpu := runtime.NumCPU()
-	if numcpu > 10 {
-		numcpu = 10
+	if numcpu > 8 {
+		numcpu = 8
 	}
 	hget.HGET_PREFIX = l.d
-	hget.Execute(l.server+path.Join("layers", id), nil, numcpu, false)
+	hget.Execute(l.server+path.Join("/layers", id), nil, numcpu, false)
 }
