@@ -98,7 +98,7 @@ func apiUploadLayer(c *fiber.Ctx) error {
 	}
 
 	var sz *uint
-	DB.Where(db.Particle{UID: user.ID}).Select("sum(size)").Scan(&sz)
+	DB.Model(db.Particle{}).Where(db.Particle{UID: user.ID}).Select("sum(size)").Scan(&sz)
 
 	if sz == nil {
 		sz = new(uint)
