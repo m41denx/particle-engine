@@ -12,14 +12,16 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"strconv"
 	"strings"
 )
 
 func StartServer(host string, port uint) error {
+	bl := strconv.IntSize * 32 * 1024 * 1024 // 1GB for x32 and 2GB for x64
 	app := fiber.New(fiber.Config{
 		ServerHeader:          "Particle Repository",
 		ETag:                  false,
-		BodyLimit:             2048 * 1024 * 1024, // 2GB
+		BodyLimit:             int(bl), // 2GB
 		DisableKeepalive:      false,
 		DisableStartupMessage: true,
 		AppName:               "Particle Repository",
@@ -44,8 +46,6 @@ func StartServer(host string, port uint) error {
 
 	app.Get("/layers/:layerid", apiPullLayer)
 	app.Get("/user", apiUser)
-
-	app.Group("/upload/")
 
 	fmt.Println(color.CyanString("Starting Particle Repository on http://%s:%d\n[Ctrl+C to stop]", host, port))
 	return app.Listen(fmt.Sprintf("%s:%d", host, port))
