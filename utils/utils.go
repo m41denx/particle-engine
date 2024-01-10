@@ -3,11 +3,16 @@ package utils
 import (
 	"crypto/md5"
 	"fmt"
+	"github.com/fatih/color"
+	"github.com/minio/selfupdate"
 	"io"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime"
+	"strings"
+	"sync"
 )
 
 const GitIgnore = `bin/
@@ -81,4 +86,34 @@ func PrepareStorage() string {
 	os.MkdirAll(filepath.Join(pc, "layers"), 0750)
 	os.MkdirAll(filepath.Join(pc, "repo"), 0750)
 	return pc
+}
+
+func SelfUpdate(ver string) error {
+	link := "https://s3.m41den.com/particle_releases/"
+	res, err := http.Get(link + "ver")
+	if err != nil {
+		return err
+	}
+	d, _ := io.ReadAll(res.Body)
+	newver := strings.Trim(string(d), "\n")
+	if ver == newver {
+		fmt.Println(color.GreenString("[UPD] Already up to date: %s", ver))
+		return nil
+	}
+	fmt.Println(color.YellowString("[UPD] Found new version %s (Current: %s)", newver, ver))
+
+	progress := NewTreeProgress()
+	var wg sync.WaitGroup
+	wg.Add(1)
+	c := make(chan bool)
+	go progress.Run("Downloading update for "+GetArchString(), &wg, c)
+	dat, err := http.Get(link + "particle-" + GetArchString())
+	if err != nil {
+		c <- true
+		return err
+	}
+	err = selfupdate.Apply(dat.Body, selfupdate.Options{})
+	c <- true
+	wg.Wait()
+	return err
 }

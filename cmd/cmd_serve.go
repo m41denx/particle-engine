@@ -66,11 +66,7 @@ Usage: ` + color.CyanString(binname+" serve [args]") + `
 }
 
 func (cmd *CmdServe) Init(args []string) (err error) {
-	err = cmd.fs.Parse(args)
-	if err != nil {
-		return
-	}
-	return
+	return cmd.fs.Parse(args)
 }
 
 func (cmd *CmdServe) Run() (err error) {
