@@ -82,9 +82,15 @@ func (r *RepoMgr) Publish(p *Particle) error {
 
 	m.Name = r.name + "@" + r.version
 
-	progress := utils.NewTreeProgress()
+	{
+		_, err := os.Stat(p.dir + "/" + m.Block)
+		if err != nil {
+			fmt.Println(color.RedString("\nError reading layer for "+m.Name+": "), "\nPlease run particle build first")
+			return err
+		}
+	}
 
-	log.Println(color.CyanString("Pushing %s manifest...", m.Name))
+	progress := utils.NewTreeProgress()
 
 	progress.Tab()
 	// Manifest

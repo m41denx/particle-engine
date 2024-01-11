@@ -49,6 +49,7 @@ func (l *Layer) Fetch(id string) error {
 		return err
 	}
 	if hs != l.ID {
+		os.Remove(path.Join(l.d, l.ID)) // Remove layer so it can be re-downloaded
 		return errors.New(fmt.Sprintf("MD5 Hashes don't match: %s and %s", l.ID, hs))
 	}
 	return nil

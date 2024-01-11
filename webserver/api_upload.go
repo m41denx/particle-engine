@@ -6,6 +6,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/m41denx/particle/structs"
 	"github.com/m41denx/particle/webserver/db"
+	"golang.org/x/exp/slices"
+	"log"
+	"regexp"
 	"strings"
 )
 
@@ -35,6 +38,26 @@ func apiUploadManifest(c *fiber.Ctx) error {
 	if name == "" || version == "" || arch == "" {
 		return c.Status(400).JSON(ErrorResponse{
 			Message: "Invalid parameters",
+		})
+	}
+
+	if !slices.Contains(SUPPORTED_ARCH, arch) {
+		return c.Status(400).JSON(ErrorResponse{
+			Message: "Unsupported architecture",
+		})
+	}
+
+	preg := regexp.MustCompile(`^[a-zA-Z0-9_.-]+$`)
+
+	if !preg.MatchString(name) {
+		return c.Status(400).JSON(ErrorResponse{
+			Message: "Invalid name (Required alphanumeric, _, -, .)",
+		})
+	}
+
+	if !preg.MatchString(version) {
+		return c.Status(400).JSON(ErrorResponse{
+			Message: "Invalid version (Required alphanumeric, _, -, .)",
 		})
 	}
 
@@ -70,7 +93,23 @@ func apiUploadManifest(c *fiber.Ctx) error {
 		IsUnlisted:  c.QueryBool("unlisted"),
 	}
 
-	err = DB.Create(&particle).Error
+	var oldParticle db.Particle
+	ex := DB.Model(db.Particle{}).Where(db.Particle{
+		Name:    particle.Name,
+		UID:     particle.UID,
+		Version: particle.Version,
+	}).Select("id").Find(&oldParticle).Error
+
+	if ex == nil {
+		particle.ID = oldParticle.UID
+		//Remove
+		err = FS.DeleteFile(oldParticle.LayerID)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+
+	err = DB.Save(&particle).Error
 	if err != nil {
 		return c.Status(500).JSON(ErrorResponse{
 			Message: err.Error(),
