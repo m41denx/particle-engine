@@ -35,7 +35,7 @@ func CalcFileHash(dp string) (string, error) {
 }
 
 func LDir(srcDir string, prefix string) []string {
-	files, err := os.ReadDir(srcDir)
+	files, err := os.ReadDir(filepath.Clean(srcDir))
 	if err != nil {
 		return nil
 	}

@@ -18,7 +18,7 @@ import (
 
 var (
 	tr = &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: false}, // Unsure if this will work
 	}
 	client = &http.Client{Transport: tr}
 )

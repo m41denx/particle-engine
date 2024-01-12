@@ -1,63 +1,15 @@
 package hget
 
 import (
-	"flag"
 	"os"
 	"os/signal"
 	"path/filepath"
-	"runtime"
 	"syscall"
 )
 
 var HGET_PREFIX = "."
 
 var displayProgress = true
-
-func main() {
-	var err error
-
-	threads := flag.Int("n", runtime.NumCPU(), "connection")
-	skiptls := flag.Bool("skip-tls", true, "skip verify certificate for https")
-
-	flag.Parse()
-	args := flag.Args()
-	if len(args) < 1 {
-		Errorln("url is required")
-		os.Exit(1)
-	}
-
-	command := args[0]
-	if command == "tasks" {
-		if err = TaskPrint(); err != nil {
-			Errorf("%v\n", err)
-		}
-		return
-	} else if command == "resume" {
-		if len(args) < 2 {
-			Errorln("downloading task name is required")
-			os.Exit(1)
-		}
-
-		var task string
-		if IsUrl(args[1]) {
-			task = TaskFromUrl(args[1])
-		} else {
-			task = args[1]
-		}
-
-		state, err := Resume(task)
-		FatalCheck(err)
-		Execute(state.Url, state, *threads, *skiptls)
-		return
-	} else {
-		if ExistDir(FolderOf(command)) {
-			Warnf("Downloading task already exist, remove first \n")
-			err := os.RemoveAll(FolderOf(command))
-			FatalCheck(err)
-		}
-		Execute(command, nil, *threads, *skiptls)
-	}
-}
 
 func Execute(url string, state *State, threads int, skiptls bool) {
 	//otherwise is hget <URL> command
