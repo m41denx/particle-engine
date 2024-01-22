@@ -1,6 +1,6 @@
 package db
 
-import gorm "github.com/cradio/gormx"
+import "gorm.io/gorm"
 
 type Particle struct {
 	gorm.Model
@@ -12,6 +12,7 @@ type Particle struct {
 	Version     string
 	Description string
 	Recipe      string
+	Downloads   uint `gorm:"default:0"`
 	Size        uint `gorm:"default:0"` // bytes
 	IsPrivate   bool `gorm:"default:0"`
 	IsUnlisted  bool `gorm:"default:0"`

@@ -31,7 +31,7 @@ type Recipe struct {
 
 func NewManifest() Manifest {
 	return Manifest{
-		Name:   "my_particle@1.0",
+		Name:   "my_particle@latest",
 		Author: "user",
 		Note:   "Short description or note about usage",
 		Block:  "[md5 autogen]",

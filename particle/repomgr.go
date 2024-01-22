@@ -30,6 +30,7 @@ type RepoMgr struct {
 	version  string
 	private  bool
 	unlisted bool
+	arch     string
 }
 
 func (r *RepoMgr) WithUrl(url string) *RepoMgr {
@@ -49,6 +50,11 @@ func (r *RepoMgr) WithVersion(version string) *RepoMgr {
 	return r
 }
 
+func (r *RepoMgr) WithArch(arch string) *RepoMgr {
+	r.arch = arch
+	return r
+}
+
 func (r *RepoMgr) WithPrivate(private bool) *RepoMgr {
 	r.private = private
 	return r
@@ -63,6 +69,10 @@ func (r *RepoMgr) Publish(p *Particle) error {
 	m := p.Manifest
 	var wg sync.WaitGroup
 
+	if r.arch == "" {
+		r.arch = utils.GetArchString()
+	}
+
 	// Parse versions
 	if len(r.name) == 0 {
 		r.name = strings.SplitN(m.Name, "@", 2)[0]
@@ -74,7 +84,7 @@ func (r *RepoMgr) Publish(p *Particle) error {
 		if len(ver) == 2 {
 			r.version = ver[1]
 		} else {
-			r.version = "1.0"
+			r.version = "latest"
 		}
 	} else {
 		r.version = strings.SplitN(r.version, "@", 2)[0]
@@ -101,7 +111,7 @@ func (r *RepoMgr) Publish(p *Particle) error {
 
 		mdata, _ := json.Marshal(m)
 
-		req, err := http.NewRequest("POST", r.url+path.Join("/upload", m.Name, utils.GetArchString()), bytes.NewReader(mdata))
+		req, err := http.NewRequest("POST", r.url+path.Join("/upload", m.Name, r.arch), bytes.NewReader(mdata))
 		if err != nil {
 			return err
 		}
@@ -127,7 +137,7 @@ func (r *RepoMgr) Publish(p *Particle) error {
 		c := make(chan bool)
 		go progress.Run("Pushing layer "+m.Block+" for "+m.Name, &wg, c)
 
-		req, err := newfileUploadRequest(r.url+path.Join("/upload", m.Name, utils.GetArchString()),
+		req, err := newfileUploadRequest(r.url+path.Join("/upload", m.Name, r.arch),
 			nil, "layer", p.dir+"/"+m.Block)
 		req, _ = Config.GenerateRequestURL(req, r.url)
 

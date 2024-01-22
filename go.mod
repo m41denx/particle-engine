@@ -5,7 +5,6 @@ go 1.20
 require (
 	github.com/aws/aws-sdk-go v1.49.19
 	github.com/bodgit/sevenzip v1.4.5
-	github.com/cradio/gormx v1.25.5
 	github.com/fatih/color v1.16.0
 	github.com/gofiber/fiber/v2 v2.52.0
 	github.com/mattn/go-isatty v0.0.20

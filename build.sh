@@ -48,6 +48,9 @@ for dist in ${!DISTRIB[*]}; do
   mc cp ./build/particle-$dist m41den/3c03f01c-ctfd/particle_releases/particle-${DISTRIB[$dist]}
 done
 
+mc cp ./build/particle-windows-7.0-amd64.exe m41den/3c03f01c-ctfd/particle_releases/particle-w64.exe
+mc cp ./build/particle-windows-7.0-386.exe m41den/3c03f01c-ctfd/particle_releases/particle-w32.exe
+
 grep "const v" cmd/main.go | sed -r 's/.*"(.*)".*/\1/' > ver
 mc cp ver m41den/3c03f01c-ctfd/particle_releases/ver
 rm ver

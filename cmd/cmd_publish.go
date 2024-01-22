@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/m41denx/particle/particle"
+	"github.com/m41denx/particle/utils"
 	"path"
+	"strings"
 )
 
 func NewCmdPublish() *CmdPublish {
@@ -20,6 +22,9 @@ func NewCmdPublish() *CmdPublish {
 	cmd.fs.BoolVar(&cmd.private, "private", false, "Publish as private")
 	cmd.fs.BoolVar(&cmd.unlisted, "unlisted", false, "Publish as unlisted")
 
+	cmd.fs.StringVar(&cmd.arch, "a", "", fmt.Sprintf("Override architecture. Supported: %s",
+		strings.Join(utils.SUPPORTED_ARCH, ", ")))
+
 	return cmd
 }
 
@@ -31,6 +36,7 @@ type CmdPublish struct {
 	version  string
 	url      string
 	dir      string
+	arch     string
 }
 
 func (cmd *CmdPublish) Name() string {
@@ -68,7 +74,7 @@ func (cmd *CmdPublish) Run() error {
 		return err
 	}
 	repo := particle.NewRepoMgr().WithPrivate(cmd.private).WithUnlisted(cmd.unlisted).
-		WithName(cmd.name).WithVersion(cmd.version).WithUrl(cmd.url)
+		WithName(cmd.name).WithVersion(cmd.version).WithUrl(cmd.url).WithArch(cmd.arch)
 
 	err = repo.Publish(p)
 	return err

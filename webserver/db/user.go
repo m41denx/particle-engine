@@ -1,6 +1,6 @@
 package db
 
-import gorm "github.com/cradio/gormx"
+import "gorm.io/gorm"
 
 type User struct {
 	gorm.Model

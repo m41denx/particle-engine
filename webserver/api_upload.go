@@ -79,6 +79,8 @@ func apiUploadManifest(c *fiber.Ctx) error {
 		})
 	}
 
+	recipe := strings.ReplaceAll(string(mb), "\n", "\\n")
+
 	particle := db.Particle{
 		Name:        name,
 		Author:      user.Username,
@@ -87,7 +89,7 @@ func apiUploadManifest(c *fiber.Ctx) error {
 		LayerID:     manifest.Block,
 		Version:     version,
 		Description: manifest.Note,
-		Recipe:      string(mb),
+		Recipe:      recipe,
 		Size:        0,
 		IsPrivate:   c.QueryBool("private"),
 		IsUnlisted:  c.QueryBool("unlisted"),
@@ -98,10 +100,11 @@ func apiUploadManifest(c *fiber.Ctx) error {
 		Name:    particle.Name,
 		UID:     particle.UID,
 		Version: particle.Version,
+		Arch:    arch,
 	}).Select("id").Find(&oldParticle).Error
 
 	if ex == nil {
-		particle.ID = oldParticle.UID
+		particle.ID = oldParticle.ID
 		//Remove
 		err = FS.DeleteFile(oldParticle.LayerID)
 		if err != nil {

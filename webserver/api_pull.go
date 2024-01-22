@@ -2,9 +2,11 @@ package webserver
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m41denx/particle/structs"
 	"github.com/m41denx/particle/webserver/db"
+	"gorm.io/gorm"
 	"log"
 )
 
@@ -21,6 +23,7 @@ func apiFetchManifest(c *fiber.Ctx) (err error) {
 
 	var particle db.Particle
 	if ver == "latest" || ver == "" {
+		ver = "latest"
 		// Fetch latest matching
 		err = DB.Where(db.Particle{
 			Name:   c.Params("name"),
@@ -56,6 +59,8 @@ func apiFetchManifest(c *fiber.Ctx) (err error) {
 			Message: err.Error(),
 		})
 	}
+
+	fmt.Println(DB.Model(db.Particle{}).Where("id = ?", particle.ID).Update("downloads", gorm.Expr("downloads + 1")).Error)
 
 	manifest.Name = particle.Name
 	manifest.Author = particle.Author
