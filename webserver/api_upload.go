@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m41denx/particle/structs"
+	"github.com/m41denx/particle/utils"
 	"github.com/m41denx/particle/webserver/db"
 	"golang.org/x/exp/slices"
 	"log"
@@ -139,6 +140,12 @@ func apiUploadLayer(c *fiber.Ctx) error {
 		})
 	}
 
+	metrics := utils.NewGoMetrics()
+	defer func() {
+		metrics.Done()
+		fmt.Println(metrics.DumpText())
+	}()
+
 	var sz *uint
 	DB.Model(db.Particle{}).Where(db.Particle{UID: user.ID}).Select("sum(size)").Scan(&sz)
 
@@ -146,6 +153,8 @@ func apiUploadLayer(c *fiber.Ctx) error {
 		sz = new(uint)
 	}
 	maxSz := user.MaxAllowedSize - *sz // To check if user is allowed to upload such large file
+
+	metrics.NewStep("Parsing Multipart")
 
 	mpfd, err := c.MultipartForm()
 	layers := mpfd.File["layer"]
@@ -193,6 +202,8 @@ func apiUploadLayer(c *fiber.Ctx) error {
 			Message: err.Error(),
 		})
 	}
+
+	metrics.NewStep("Streaming to S3")
 
 	err = FS.PutFileStream(layerID, ld)
 
