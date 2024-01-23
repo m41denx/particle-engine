@@ -9,7 +9,7 @@ import (
 
 var HGET_PREFIX = "."
 
-var displayProgress = true
+var DisplayProgress = true
 
 func Execute(url string, state *State, threads int, skiptls bool) {
 	//otherwise is hget <URL> command

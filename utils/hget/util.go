@@ -42,7 +42,7 @@ func ExistDir(folder string) bool {
 }
 
 func DisplayProgressBar() bool {
-	return isatty.IsTerminal(os.Stdout.Fd()) && displayProgress
+	return isatty.IsTerminal(os.Stdout.Fd()) && DisplayProgress
 }
 
 func FolderOf(url string) string {
