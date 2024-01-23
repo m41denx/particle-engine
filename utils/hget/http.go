@@ -211,7 +211,9 @@ func (d *HttpDownloader) Do(doneChan chan bool, fileChan chan string, errorChan 
 						if err != io.EOF {
 							errorChan <- err
 						}
-						bar.Finish()
+						if DisplayProgressBar() {
+							bar.Finish()
+						}
 						fileChan <- part.Path
 						return
 					}
@@ -222,5 +224,7 @@ func (d *HttpDownloader) Do(doneChan chan bool, fileChan chan string, errorChan 
 
 	ws.Wait()
 	doneChan <- true
-	barpool.Stop()
+	if DisplayProgressBar() {
+		barpool.Stop()
+	}
 }
