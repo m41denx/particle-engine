@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"syscall"
 )
 
 type SevenZip struct {
@@ -48,13 +47,8 @@ func (s *SevenZip) WorkDir(dir string) *SevenZip {
 func (s *SevenZip) Compress() error {
 	args := []string{"a", s.archive}
 	args = append(args, s.args...)
-	//fmt.Println("\n", args)
 	cmd := exec.Command(s.binpath, args...)
-	if GetArchString()[0] == 'w' {
-		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
-	}
-	//cmd.Stdout = os.Stdout
-	//cmd.Stderr = os.Stderr
+	cmd.SysProcAttr = Sysattr
 	cmd.Dir = s.workdir
 	return cmd.Run()
 }
@@ -63,9 +57,7 @@ func (s *SevenZip) Decompress(toDir string) error {
 	args := []string{"x", s.archive, "-aoa", "-o" + toDir}
 	args = append(args, s.args...)
 	cmd := exec.Command(s.binpath, args...)
-	if GetArchString()[0] == 'w' {
-		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
-	}
+	cmd.SysProcAttr = Sysattr
 	return cmd.Run()
 }
 

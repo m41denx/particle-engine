@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"syscall"
 )
 
 type Engine struct {
@@ -69,8 +68,6 @@ func PrepareExecutor(dir string, command string, module string) *exec.Cmd {
 	cmd.Env = env
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	if utils.GetArchString()[0] == 'w' {
-		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
-	}
+	cmd.SysProcAttr = utils.Sysattr
 	return cmd
 }

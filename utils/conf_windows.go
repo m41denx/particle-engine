@@ -2,7 +2,10 @@
 
 package utils
 
-import _ "embed"
+import (
+	_ "embed"
+	"syscall"
+)
 
 //go:embed assets/7z.exe
 var SevenZipExecutable []byte
@@ -15,3 +18,5 @@ var BusyboxExecutable []byte
 const BusyboxName = "busybox.exe"
 
 const SymlinkPostfix = ".exe"
+
+var Sysattr = &syscall.SysProcAttr{HideWindow: true}
