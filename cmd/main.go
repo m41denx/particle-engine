@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 )
 
-const v = "0.5.8-dev"
+const v = "0.5.9-dev"
 
 var binname string
 var BuildTag string
