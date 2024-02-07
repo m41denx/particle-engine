@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/aws/aws-sdk-go v1.49.19
 	github.com/bodgit/sevenzip v1.4.5
+	github.com/cheggaaa/pb/v3 v3.1.5
 	github.com/fatih/color v1.16.0
 	github.com/gofiber/fiber/v2 v2.52.0
 	github.com/mattn/go-isatty v0.0.20
@@ -18,6 +19,7 @@ require (
 
 require (
 	aead.dev/minisign v0.2.1 // indirect
+	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/bodgit/plumbing v1.3.0 // indirect
 	github.com/bodgit/windows v1.0.1 // indirect

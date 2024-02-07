@@ -23,7 +23,6 @@ func apiFetchManifest(c *fiber.Ctx) (err error) {
 
 	var particle db.Particle
 	if ver == "latest" || ver == "" {
-		ver = "latest"
 		// Fetch latest matching
 		err = DB.Where(db.Particle{
 			Name:   c.Params("name"),

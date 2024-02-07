@@ -11,9 +11,8 @@ var HGET_PREFIX = "."
 
 var DisplayProgress = true
 
-func Execute(url string, state *State, threads int, skiptls bool) {
-	//otherwise is hget <URL> command
-	var err error
+func Execute(url string, state *State, threads int, skiptls bool) (err error) {
+	//otherwise is hget <url> command
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan,
@@ -52,7 +51,7 @@ func Execute(url string, state *State, threads int, skiptls bool) {
 			}
 		case file := <-fileChan:
 			files = append(files, file)
-		case err := <-errorChan:
+		case err = <-errorChan:
 			Errorf("%v", err)
 			panic(err) //maybe need better style
 		case part := <-stateChan:
@@ -62,7 +61,7 @@ func Execute(url string, state *State, threads int, skiptls bool) {
 				if downloader.resumable {
 					Printf("Interrupted, saving state ... \n")
 					s := &State{Url: url, Parts: parts}
-					err := s.Save()
+					err = s.Save()
 					if err != nil {
 						Errorf("%v\n", err)
 					}
