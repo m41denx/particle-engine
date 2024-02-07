@@ -34,8 +34,7 @@ func (d *Downloader) AddJob(job *Job) {
 	if d.showBar {
 		sz, _ := job.PrefetchSize()
 		bar := pb.New64(sz)
-		bar.SetTemplateString(`{{with string . "prefix"}}{{.}} {{end}}{{counters . }} {{bar . "[" "—" "›" "•" "]"}} {{with string . "suffix"}} {{.}}{{end}}`)
-		//bar.SetTemplateString(`{{with string . "prefix"}}{{.}} {{end}}{{counters . }} {{bar . "[" "—" "›" "•" "]"}} {{speed . "%s/s" }} {{percent . }}{{with string . "suffix"}} {{.}}{{end}}`)
+		bar.SetTemplateString(`{{with string . "prefix"}}{{.}} {{end}}{{counters . }} {{bar . "[" "━" "›" "•" "]"}} {{with string . "suffix"}} {{.}}{{end}}`)
 		job = job.WithBar(bar)
 		d.pool.Add(bar)
 	}

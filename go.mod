@@ -8,10 +8,8 @@ require (
 	github.com/cheggaaa/pb/v3 v3.1.5
 	github.com/fatih/color v1.16.0
 	github.com/gofiber/fiber/v2 v2.52.0
-	github.com/mattn/go-isatty v0.0.20
 	github.com/minio/selfupdate v0.6.0
 	golang.org/x/exp v0.0.0-20240110193028-0dcbfd608b1e
-	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gorm.io/driver/mysql v1.5.2
 	gorm.io/driver/sqlite v1.5.4
 	gorm.io/gorm v1.25.5
@@ -32,6 +30,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/klauspost/compress v1.17.4 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/mattn/go-sqlite3 v1.14.19 // indirect
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect

@@ -6,7 +6,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/m41denx/particle/utils"
 	"github.com/m41denx/particle/utils/downloader"
-	"github.com/m41denx/particle/utils/hget"
 	"os"
 	"path"
 	"path/filepath"
@@ -100,9 +99,4 @@ func (l *Layer) ScheduleDownload(id string, pname string, dlmgr *downloader.Down
 	job := downloader.NewJob(l.server+path.Join("/layers", id), "GET", path.Join(l.d, id))
 	job.WithLabel(color.GreenString("→ %s [%s]", pname, id))
 	dlmgr.AddJob(job)
-}
-
-func (l *Layer) DownloadLegacy(id string) error {
-	hget.HGET_PREFIX = l.d
-	return hget.Execute(l.server+path.Join("/layers", id), nil, NUMCPU, false)
 }
