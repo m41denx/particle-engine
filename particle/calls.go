@@ -33,7 +33,7 @@ func ParticlePrepare(pathname string) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	p.Analyze()
+	p.Analyze(false)
 }
 
 func ParticleBuild(pathname string) {

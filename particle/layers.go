@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/m41denx/particle/utils"
+	"github.com/m41denx/particle/utils/downloader"
 	"github.com/m41denx/particle/utils/hget"
 	"os"
 	"path"
@@ -30,12 +31,13 @@ func NewLayer(server string) *Layer {
 	}
 }
 
-func (l *Layer) Fetch(id string) error {
+func (l *Layer) Fetch(id string, pname string, dlmgr *downloader.Downloader) error {
 	l.ID = id
 	f, err := os.Stat(path.Join(l.d, l.ID))
 	if err != nil {
-		l.Download(l.ID)
+		l.ScheduleDownload(l.ID, pname, dlmgr)
 	} else {
+		fmt.Print(color.GreenString("→ %s [%s]", pname, id))
 		sz := float64(f.Size()) / (1024 * 1024) //MiB
 		if sz > 1024 {
 			fmt.Println(color.GreenString(" • %.1f GB", sz/1024))
@@ -43,6 +45,10 @@ func (l *Layer) Fetch(id string) error {
 			fmt.Println(color.GreenString(" • %.1f MB", sz))
 		}
 	}
+	return nil
+}
+
+func (l *Layer) MatchHashes() error {
 	hs, err := l.CalcHash()
 	if err != nil {
 		return err
@@ -90,7 +96,13 @@ func (l *Layer) CreateLayer(from string, to string) (err error) {
 	return UnzipProvider.OpenZip(to).WorkDir(from).AddDirectory("").Compress()
 }
 
-func (l *Layer) Download(id string) {
+func (l *Layer) ScheduleDownload(id string, pname string, dlmgr *downloader.Downloader) {
+	job := downloader.NewJob(l.server+path.Join("/layers", id), "GET", path.Join(l.d, id))
+	job.WithLabel(color.GreenString("→ %s [%s]", pname, id))
+	dlmgr.AddJob(job)
+}
+
+func (l *Layer) DownloadLegacy(id string) error {
 	hget.HGET_PREFIX = l.d
-	hget.Execute(l.server+path.Join("/layers", id), nil, NUMCPU, false)
+	return hget.Execute(l.server+path.Join("/layers", id), nil, NUMCPU, false)
 }

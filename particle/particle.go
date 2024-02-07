@@ -7,6 +7,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/m41denx/particle/structs"
 	"github.com/m41denx/particle/utils"
+	"github.com/m41denx/particle/utils/downloader"
 	"io"
 	"log"
 	"net/http"
@@ -56,13 +57,18 @@ func (p *Particle) SetDir(dir string) {
 	p.dir = dir
 }
 
-func (p *Particle) Analyze() {
+func (p *Particle) Analyze(dry bool) {
 	progress := utils.NewTreeProgress()
 	fmt.Println(color.CyanString("Generating dependency tree..."))
 	fmt.Println("~/" + p.Manifest.Name)
 	p.makeTree(progress)
 	fmt.Println(color.CyanString("Downloading dependencies..."))
 	p.downloadLayers()
+
+	if dry {
+		return
+	}
+
 	if p.base != nil {
 		fmt.Println(color.CyanString("Extracting base..."))
 		p.base.prepareBase("dist") // We build new particle, so we need to operate on it's base rather than itself
@@ -95,17 +101,14 @@ func (p *Particle) makeLayer() {
 	l := NewLayer(p.Manifest.GetLayerServer())
 	err := l.CreateLayer(filepath.Join(p.dir, "out"), filepath.Join("_tmp_layer_.7z"))
 	if err != nil {
-		fmt.Println(color.RedString("\nERROR: "), err)
 		panic(err)
 	}
 	h, err := utils.CalcFileHash(filepath.Join(p.dir, "out", "_tmp_layer_.7z"))
 	if err != nil {
-		fmt.Println(color.RedString("\nERROR: "), err)
 		panic(err)
 	}
 	err = os.Rename(filepath.Join(p.dir, "out", "_tmp_layer_.7z"), filepath.Join(p.dir, h))
 	if err != nil {
-		fmt.Println(color.RedString("\nERROR: "), err)
 		panic(err)
 	}
 	p.Manifest.Block = h
@@ -122,7 +125,7 @@ func (p *Particle) makeTree(progress *utils.TreeProgress) {
 		go progress.Run("└── base: "+p.Manifest.Recipe.Base, &wg, c)
 		particle, err := p.loadParticle(p.Manifest.Recipe.Base)
 		if err != nil {
-			log.Fatalln(err)
+			panic(err)
 		}
 		c <- true
 		wg.Wait()
@@ -141,10 +144,10 @@ func (p *Particle) makeTree(progress *utils.TreeProgress) {
 		go progress.Run("└── engine: "+engine, &wg, c)
 		particle, err := p.loadParticle(engine)
 		if err != nil {
-			log.Fatalln(err)
+			panic(err)
 		}
 		if len(particle.Manifest.Recipe.Run) > 0 {
-			log.Fatalln("Engines cannot contain RUN sections in their manifests")
+			panic("Engines cannot contain RUN sections in their manifests")
 		}
 		c <- true
 		wg.Wait()
@@ -176,12 +179,29 @@ func (p *Particle) makeTree(progress *utils.TreeProgress) {
 }
 
 func (p *Particle) downloadLayers() {
+	dlmgr := downloader.NewDownloader(NUMCPU)
+	dlmgr.ShowBar(true)
+	var tasks []*Layer
 	for k, particle := range ParticleCache {
-		fmt.Print(color.GreenString("→ %s [%s]", k, particle.Manifest.Block))
+		fmt.Print()
 		l := NewLayer(particle.Manifest.GetLayerServer())
-		err := l.Fetch(particle.Manifest.Block)
+		err := l.Fetch(particle.Manifest.Block, k, dlmgr)
 		if err != nil {
-			fmt.Println(color.RedString("\nERROR: "), err)
+			panic(err)
+		}
+		tasks = append(tasks, l)
+	}
+	errs := dlmgr.Do()
+	if len(errs) > 0 {
+		for i, err := range errs {
+			fmt.Println(color.RedString("\nerr%i. ", i+1), err)
+		}
+		panic(errors.New("Multiple errors occured while pulling layers"))
+	}
+
+	for _, l := range tasks {
+		err := l.MatchHashes()
+		if err != nil {
 			panic(err)
 		}
 		LayerCache[l.ID] = l
@@ -202,7 +222,6 @@ func (p *Particle) prepareBase(target string) {
 		}
 		err := layer.ExtractTo(filepath.Join(p.dir, target))
 		if err != nil {
-			fmt.Println(color.RedString("\nERROR: "), err)
 			panic(err)
 		}
 	})
@@ -240,13 +259,11 @@ func (p *Particle) prepareEngines() {
 			}
 			err := layer.ExtractTo(filepath.Join(p.dir, "engines", eng.Manifest.Name))
 			if err != nil {
-				fmt.Println(color.RedString("\nERROR: "), err)
 				panic(err)
 			}
 			engine := NewEngine(eng)
 			err = engine.Load()
 			if err != nil {
-				fmt.Println(color.RedString("\nERROR: "), err)
 				panic(err)
 			}
 			EngineCache[eng.Manifest.Name] = engine
@@ -269,7 +286,6 @@ func (p *Particle) populateEngineBinaries() {
 			err := os.Symlink(pathw, filepath.Join(p.dir, "bin", bin+utils.SymlinkPostfix))
 
 			if err != nil {
-				fmt.Println(color.RedString("\nERROR: "), err)
 				panic(err)
 			}
 		}
@@ -298,7 +314,6 @@ func (p *Particle) prepareApplicable() {
 			}
 			err := layer.ExtractTo(filepath.Join(p.dir, "src", app.Manifest.Name))
 			if err != nil {
-				fmt.Println(color.RedString("\nERROR: "), err)
 				panic(err)
 			}
 			for k, v := range app.Manifest.Meta {
@@ -319,7 +334,6 @@ func (p *Particle) executeApplicable() {
 			cmd := PrepareExecutor(p.dir, ex, filepath.Join("src", app.Manifest.Name))
 			err := cmd.Run()
 			if err != nil {
-				fmt.Println(color.RedString("\nERROR: "), err)
 				panic(err)
 			}
 		}
@@ -375,14 +389,12 @@ func (p *Particle) compareIntegrity() {
 			fh, err1 := os.Open(filepath.Join(p.dir, "dist", f))
 			nh, err2 := os.Create(filepath.Join(p.dir, "out", f))
 			if err1 != nil || err2 != nil {
-				fmt.Println(color.RedString("\nERROR: "), err1, err2)
 				panic(err)
 			}
 			defer fh.Close()
 			defer nh.Close()
 			_, err3 := io.Copy(nh, fh)
 			if err3 != nil {
-				fmt.Println(color.RedString("\nERROR: "), err3)
 				panic(err)
 			}
 		}
@@ -399,7 +411,6 @@ func (p *Particle) compareIntegrity() {
 		deletionsData := strings.Join(deletions, "\n")
 		err = os.WriteFile(filepath.Join(p.dir, "out", ".deletions"), []byte(deletionsData), 0755)
 		if err != nil {
-			fmt.Println(color.RedString("\nERROR: "), err)
 			panic(err)
 		}
 	}
