@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/m41denx/particle/particle"
 	"github.com/m41denx/particle/structs"
 	"github.com/m41denx/particle/utils"
@@ -9,7 +10,7 @@ import (
 	"path/filepath"
 )
 
-const v = "0.5.9-dev"
+const v = "0.6.0-alpha"
 
 var binname string
 var BuildTag string
@@ -50,6 +51,7 @@ func main() {
 		NewCmdPublish(),
 		NewCmdServe(),
 
+		NewCmdPull(),
 		NewCmdVersion(),
 	}
 
@@ -67,7 +69,7 @@ func main() {
 			}
 			err = sub.Run()
 			if err != nil {
-				fmt.Println(err)
+				fmt.Println(color.RedString("\nERROR: "), err)
 			}
 			return
 		}
@@ -89,8 +91,8 @@ Commands:
 	serve		Starts local repository webserver (see help)
 
 Other commands:
-	[unsupported] pull 		Pulls particle and it's dependencies from remote repository without building it
-	[unsupported] local		Manages local particles]
+	pull 		Pulls particle and it's dependencies from remote repository without building it
+	[unsupported] local		Manages local particles
 	version		Prints version
 `)
 }

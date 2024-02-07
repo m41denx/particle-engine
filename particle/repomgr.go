@@ -65,6 +65,50 @@ func (r *RepoMgr) WithUnlisted(unlisted bool) *RepoMgr {
 	return r
 }
 
+func (r *RepoMgr) Pull(name string) error {
+	if r.arch == "" {
+		r.arch = utils.GetArchString()
+	}
+
+	// Parse versions
+	if len(r.name) == 0 {
+		r.name = strings.SplitN(name, "@", 2)[0]
+	} else {
+		r.name = strings.SplitN(r.name, "@", 2)[0]
+	}
+	if len(r.version) == 0 {
+		ver := strings.SplitN(name, "@", 2)
+		if len(ver) == 2 {
+			r.version = ver[1]
+		} else {
+			r.version = "latest"
+		}
+	} else {
+		r.version = strings.SplitN(r.version, "@", 2)[0]
+	}
+
+	name = r.name + "@" + r.version
+
+	virtparticle, err := NewParticleFromString(fmt.Sprintf(`
+{
+	"name": "blank",
+	"server": "%s",
+	"recipe": {
+		"base": "%s",
+		"apply": [],
+		"engines": [],
+		"run": []
+	}
+
+}`, r.url, name))
+
+	if err != nil {
+		return err
+	}
+	virtparticle.Analyze(true)
+	return nil
+}
+
 func (r *RepoMgr) Publish(p *Particle) error {
 	m := p.Manifest
 	var wg sync.WaitGroup
