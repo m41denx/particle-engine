@@ -30,3 +30,5 @@ var NUMCPU = func() int {
 	}
 	return ncpu
 }()
+
+var UseTerminal = true

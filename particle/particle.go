@@ -180,7 +180,7 @@ func (p *Particle) makeTree(progress *utils.TreeProgress) {
 
 func (p *Particle) downloadLayers() {
 	dlmgr := downloader.NewDownloader(NUMCPU)
-	dlmgr.ShowBar(true)
+	dlmgr.ShowBar(UseTerminal)
 	var tasks []*Layer
 	for k, particle := range ParticleCache {
 		fmt.Print()
