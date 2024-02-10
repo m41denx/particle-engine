@@ -2,6 +2,7 @@ package downloader
 
 import (
 	"errors"
+	"fmt"
 	"github.com/cheggaaa/pb/v3"
 	"io"
 	"net/http"
@@ -69,6 +70,8 @@ func (j *Job) Do(wg *sync.WaitGroup) error {
 		j.progress.Set(pb.Bytes, true)
 		j.progress.Set(pb.SIBytesPrefix, true)
 		j.progress.Set("prefix", j.label)
+	} else {
+		fmt.Println(j.label + " > Downloading...")
 	}
 	src := resp.Body
 	if j.showBar {
