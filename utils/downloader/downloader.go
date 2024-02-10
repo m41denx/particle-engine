@@ -56,9 +56,11 @@ func (d *Downloader) Do() []error {
 			}
 		}()
 	}
-	err := d.pool.Start()
-	if err != nil {
-		errs = append(errs, err)
+	if d.showBar {
+		err := d.pool.Start()
+		if err != nil {
+			errs = append(errs, err)
+		}
 	}
 	d.wg.Wait()
 	return errs
