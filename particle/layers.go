@@ -53,8 +53,10 @@ func (l *Layer) MatchHashes() error {
 		return err
 	}
 	if hs != l.ID {
-		os.Remove(path.Join(l.d, l.ID)) // Remove layer so it can be re-downloaded
-		return errors.New(fmt.Sprintf("MD5 Hashes don't match: %s and %s", l.ID, hs))
+		info, _ := os.Stat(path.Join(l.d, l.ID))
+		sz := float64(info.Size()) / (1024 * 1024) //MiB
+		os.Remove(path.Join(l.d, l.ID))            // Remove layer so it can be re-downloaded
+		return errors.New(fmt.Sprintf("MD5 Hashes don't match: %s and %s (%.2f MB)", l.ID, hs, sz))
 	}
 	return nil
 }

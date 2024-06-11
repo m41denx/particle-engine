@@ -35,6 +35,7 @@ func (d *Downloader) AddJob(job *Job) {
 		sz, _ := job.PrefetchSize()
 		bar := pb.New64(sz)
 		bar.SetTemplateString(`{{with string . "prefix"}}{{.}} {{end}}{{counters . }} {{bar . "[" "━" "›" "•" "]"}} {{with string . "suffix"}} {{.}}{{end}}`)
+		//bar.SetTemplate(pb.Full)
 		job = job.WithBar(bar)
 		d.pool.Add(bar)
 	}

@@ -83,7 +83,8 @@ func (j *Job) Do(wg *sync.WaitGroup) error {
 		return err
 	}
 	defer dst.Close()
-	_, err = io.Copy(dst, src)
+	buf := make([]byte, 1*1024*1024) // 1M buffer
+	_, err = io.CopyBuffer(dst, src, buf)
 	if j.showBar {
 		j.progress.Finish()
 	}
