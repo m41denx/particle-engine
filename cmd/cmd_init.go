@@ -12,6 +12,7 @@ func NewCmdInit() *CmdInit {
 		fs: flag.NewFlagSet("init", flag.ExitOnError),
 	}
 	cmd.fs.StringVar(&cmd.name, "n", "my_particle", "Particle name")
+	cmd.fs.BoolVar(&particle.UseTerminal, "q", false, "Suppress terminal animations")
 
 	return cmd
 }

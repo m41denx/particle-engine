@@ -11,6 +11,7 @@ func NewCmdPrepare() *CmdPrepare {
 	cmd := &CmdPrepare{
 		fs: flag.NewFlagSet("prepare", flag.ExitOnError),
 	}
+	cmd.fs.BoolVar(&particle.UseTerminal, "q", false, "Suppress terminal animations")
 	return cmd
 }
 

@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 )
 
-const v = "0.6.1-beta"
+const v = "0.6.2-beta"
 
 var binname string
 var BuildTag string

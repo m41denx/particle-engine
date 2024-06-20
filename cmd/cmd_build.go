@@ -11,6 +11,8 @@ func NewCmdBuild() *CmdBuild {
 	cmd := &CmdBuild{
 		fs: flag.NewFlagSet("build", flag.ExitOnError),
 	}
+	cmd.fs.BoolVar(&particle.UseTerminal, "q", false, "Suppress terminal animations")
+
 	return cmd
 }
 
