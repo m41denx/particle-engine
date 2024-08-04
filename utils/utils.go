@@ -21,7 +21,7 @@ engines/
 out/
 src/`
 
-var SUPPORTED_ARCH = []string{"w32", "w64", "l64", "l64a", "l32", "d64", "d64a"}
+var SUPPORTED_ARCH = []string{"w32", "w64", "l64", "l64a", "d64", "d64a"}
 
 func CalcFileHash(dp string) (string, error) {
 	hash := md5.New()

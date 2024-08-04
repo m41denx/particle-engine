@@ -45,3 +45,38 @@
 > 
 > EXAMPLE: `GET https://m41den:mytoken@particles.fruitspace.one/user`
 
+
+## Config Structure
+Language: [YAML](https://gopkg.in/yaml.v3)
+
+### Config Structure
+```yaml
+type: particle  # type: particle/engine
+name: author/particle_name@v2
+
+meta:
+    author: "Particle Author"
+    note: "Short note"
+
+layer:
+    block: "[md5 autogen]"
+    server: "http://optional/v1"
+
+recipe:
+    - use: fruitspace/gd_android@2.2
+    - apply: gdrainix.xyz/particles/rainix/gd_patcher
+      env:
+        AMOGUS: YES
+      command: overriden
+
+runnable:
+  runner: "cygwin"  # runner: busybox/cygwin (cygwin=65->250mb)
+  require:
+    - engine: core/python@3.9
+    - apply: m41den/gd_patcher
+  build:
+    run: |
+      command -arg value
+  expose:
+    python3: "./bin/python.exe"
+```

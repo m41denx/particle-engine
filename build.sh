@@ -14,7 +14,6 @@ DISTRIB["darwin-10.14-arm64"]="d64a"
 DISTRIB["windows-7.0-amd64.exe"]="w64"
 DISTRIB["windows-7.0-386.exe"]="w32"
 DISTRIB["linux-amd64"]="l64"
-DISTRIB["linux-386"]="l32"
 DISTRIB["linux-arm64"]="l64a"
 
 PATH=$PATH:~/go/bin:

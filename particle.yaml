@@ -1,0 +1,27 @@
+type: particle
+name: author/particle_name@v2
+
+meta:
+  author: "Particle Author"
+  note: "Short note"
+
+layer:
+  block: "[md5 autogen]"
+  server: "http://optional/v1"
+
+recipe:
+  - use: fruitspace/gd_android@2.2
+  - apply: gdrainix.xyz/particles/rainix/gd_patcher
+    env:
+      AMOGUS: YES
+    command: ovverriden
+
+runnable:
+  require:
+    - engine: core/python@3.9
+    - apply: m41den/gd_patcher
+  build:
+    run: |
+      command -arg value
+  expose:
+    python3: "./bin/python.exe"
