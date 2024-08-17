@@ -1,4 +1,4 @@
-package particle
+package pkg
 
 import (
 	"github.com/m41denx/particle-engine/structs"

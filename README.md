@@ -59,7 +59,7 @@ meta:
     note: "Short note"
 
 layer:
-    block: "[md5 autogen]"
+    block: "[sha256 autogen]"
     server: "http://optional/v1"
 
 recipe:
@@ -70,13 +70,28 @@ recipe:
       command: overriden
 
 runnable:
-  runner: "cygwin"  # runner: busybox/cygwin (cygwin=65->250mb)
+  runner: "full"  # runner: thin/full (full is cygwin, 65->250mb)
   require:
-    - engine: core/python@3.9
     - apply: m41den/gd_patcher
   build:
     run: |
       command -arg value
   expose:
-    python3: "./bin/python.exe"
+    python3: "/usr/bin/python.exe"
+```
+
+### FS Layout
+```
+/build *
+/dev
+/etc
+/home
+/opt
+/runnable *
+     ---> /<runnablename>   
+/tmp
+     ---> /buildcache
+/usr
+/var
+integrity.json
 ```

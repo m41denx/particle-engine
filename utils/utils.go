@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"crypto/md5"
+	"crypto/sha256"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/minio/selfupdate"
@@ -24,7 +24,7 @@ src/`
 var SUPPORTED_ARCH = []string{"w32", "w64", "l64", "l64a", "d64", "d64a"}
 
 func CalcFileHash(dp string) (string, error) {
-	hash := md5.New()
+	hash := sha256.New()
 	fp, err := os.Open(dp)
 	defer fp.Close()
 	if err != nil {
@@ -87,6 +87,7 @@ func PrepareStorage() string {
 	os.MkdirAll(pc, 0750)
 	os.MkdirAll(filepath.Join(pc, "layers"), 0750)
 	os.MkdirAll(filepath.Join(pc, "repo"), 0750)
+	os.MkdirAll(filepath.Join(pc, "build"), 0750)
 	return pc
 }
 
