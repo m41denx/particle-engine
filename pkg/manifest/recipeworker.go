@@ -1,4 +1,4 @@
-package mainfest
+package manifest
 
 import (
 	"context"
@@ -30,7 +30,7 @@ func NewRecipeWorker(ctx *BuildContext, parent *RecipeWorker, manifest Manifest)
 }
 
 func NewRecipeWorkerFromURL(ctx *BuildContext, parent *RecipeWorker, meta ParticleMeta) (*RecipeWorker, error) {
-	manifestURL := fmt.Sprintf("%s/%s/%s", meta.Server, meta.Fullname, utils.GetArchString())
+	manifestURL := fmt.Sprintf("%s%s/%s.yaml", meta.Server, meta.Fullname, utils.GetArchString())
 	req, err := http.NewRequest("GET", manifestURL, nil)
 	if err != nil {
 		return nil, err
@@ -69,6 +69,12 @@ func (rw *RecipeWorker) fetchChildren() error {
 		if err != nil {
 			return errors.New("invalid particle definition: " + child.GetParticle())
 		}
+		if rw.parent != nil && child.ApplyParticle != "" {
+			break
+			// We are getting deep in the tree, ignoring runnables
+			// There are only usables and result layer
+		}
+
 		worker, err := NewRecipeWorkerFromURL(rw.ctx, rw, meta)
 		if err != nil {
 			return err
@@ -84,7 +90,12 @@ func (rw *RecipeWorker) fetchChildren() error {
 			return nil
 		}
 	}
-	rw.layer = layer.NewLayer(rw.manifest.Layer.Block, rw.ldir, rw.manifest.Layer.Server)
+	if rw.parent != nil {
+		rw.layer = layer.NewLayer(rw.manifest.Layer.Block, rw.ldir, rw.manifest.Layer.Server)
+		rw.ctx.hookAddLayer(rw.layer)
+		rw.ctx.hookPushRecipe(rw)
+	}
+	return nil
 }
 
 /* TODO

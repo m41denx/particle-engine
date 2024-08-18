@@ -1,8 +1,9 @@
-package mainfest
+package manifest
 
 import (
+	"fmt"
 	"github.com/m41denx/particle-engine/pkg/layer"
-	"github.com/m41denx/particle/structs"
+	"github.com/m41denx/particle-engine/structs"
 	"os"
 	"path/filepath"
 )
@@ -35,10 +36,19 @@ func NewBuildContext(manifest Manifest, ldir string, config *structs.Config) *Bu
 	}
 }
 
-func (ctx *BuildContext) fetchDependencies() {
+func (ctx *BuildContext) FetchDependencies() error {
 	headWorker := NewRecipeWorker(ctx, nil, ctx.Manifest)
+	if err := headWorker.fetchChildren(); err != nil {
+		return err
+	}
+	fmt.Printf("%#v", ctx)
+	return nil
 }
 
 func (ctx *BuildContext) hookAddLayer(layer *layer.Layer) {
 	ctx.layers[layer.Hash] = layer
+}
+
+func (ctx *BuildContext) hookPushRecipe(rw *RecipeWorker) {
+	ctx.longrecipe = append(ctx.longrecipe, rw)
 }

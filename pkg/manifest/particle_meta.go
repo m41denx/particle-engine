@@ -1,4 +1,4 @@
-package mainfest
+package manifest
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package mainfest
+package manifest
 
 import (
 	"golang.org/x/exp/slices"

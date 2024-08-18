@@ -2,7 +2,6 @@
 .idea/
 
 _dev/
-_dev/repo/
 
 build/
 local.db

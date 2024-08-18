@@ -34,7 +34,7 @@ var defaultRetryStatusCodes = []int{
 	499,
 }
 
-func ShouldRetry(err error) bool {
+func shouldRetry(err error) bool {
 	if errors.Is(err, context.DeadlineExceeded) {
 		return false
 	}
@@ -49,7 +49,11 @@ func ShouldRetry(err error) bool {
 func GetTransport() http.RoundTripper {
 	return transport.NewRetry(
 		DefaultTransport,
-		transport.WithRetryPredicate(ShouldRetry),
+		transport.WithRetryPredicate(shouldRetry),
 		transport.WithRetryStatusCodes(defaultRetryStatusCodes...),
 	)
+}
+
+func GetLayerFetcher() *http.Client {
+	return &http.Client{Transport: GetTransport()}
 }

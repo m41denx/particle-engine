@@ -51,7 +51,6 @@ Language: [YAML](https://gopkg.in/yaml.v3)
 
 ### Config Structure
 ```yaml
-type: particle  # type: particle/engine
 name: author/particle_name@v2
 
 meta:
@@ -74,8 +73,8 @@ runnable:
   require:
     - apply: m41den/gd_patcher
   build:
-    run: |
-      command -arg value
+    - run: |
+        command -arg value
   expose:
     python3: "/usr/bin/python.exe"
 ```
