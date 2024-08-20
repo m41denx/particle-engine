@@ -19,6 +19,10 @@ type Manifest struct {
 
 type Meta map[string]string
 
+func (meta *Meta) asMap() map[string]string {
+	return *meta
+}
+
 type LayerStanza struct {
 	Block  string `yaml:"block"`
 	Server string `yaml:"server,omitempty"`
