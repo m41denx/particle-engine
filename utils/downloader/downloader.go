@@ -2,6 +2,8 @@ package downloader
 
 import (
 	"github.com/cheggaaa/pb/v3"
+	"golang.org/x/term"
+	"os"
 	"runtime"
 	"sync"
 )
@@ -19,11 +21,16 @@ func NewDownloader(threads int) *Downloader {
 	if threads == 0 {
 		threads = runtime.NumCPU()
 	}
-	return &Downloader{threads: threads, retries: 3, pool: pb.NewPool()}
+	return &Downloader{threads: threads, retries: 1, pool: pb.NewPool()}
 }
 
 func (d *Downloader) ShowBar(show bool) {
 	d.showBar = show
+}
+
+func (d *Downloader) ShowBarAuto() {
+	// Check if we have tty
+	d.showBar = term.IsTerminal(int(os.Stdout.Fd()))
 }
 
 func (d *Downloader) SetRetries(retries int) {

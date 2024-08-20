@@ -20,10 +20,8 @@ var NUMCPU = func() int {
 	} else {
 		ncpu, _ = strconv.Atoi(numcpu)
 	}
-	if ncpu > 8 {
-		ncpu = 8
+	if ncpu > 4 {
+		ncpu = 4
 	}
 	return ncpu
 }()
-
-var UseTerminal = true

@@ -1,4 +1,4 @@
-package mainfest
+package manifest
 
 import (
 	"gopkg.in/yaml.v3"
@@ -6,10 +6,10 @@ import (
 	"strings"
 )
 
-const DefaultRepo = "http://particles.fruitspace.one/repo/"
+// const DefaultRepo = "http://particles.fruitspace.one/repo/"
+const DefaultRepo = "http://127.0.0.1:8000/repo/"
 
 type Manifest struct {
-	Type     string              `yaml:"type,omitempty"`
 	Name     string              `yaml:"name"`
 	Meta     Meta                `yaml:"meta,omitempty"`
 	Layer    LayerStanza         `yaml:"layer"`

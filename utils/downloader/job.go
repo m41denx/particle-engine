@@ -11,6 +11,7 @@ import (
 )
 
 type Job struct {
+	client   *http.Client
 	url      string
 	method   string
 	progress *pb.ProgressBar
@@ -21,7 +22,11 @@ type Job struct {
 }
 
 func NewJob(url string, method string, fp string) *Job {
-	return &Job{url: url, method: method, retries: 3, fp: fp}
+	return &Job{client: &http.Client{}, url: url, method: method, retries: 1, fp: fp}
+}
+
+func (j *Job) SetHttpClient(client *http.Client) {
+	j.client = client
 }
 
 func (j *Job) SetRetries(retries int) {
@@ -56,7 +61,7 @@ func (j *Job) Do(wg *sync.WaitGroup) error {
 	if err != nil {
 		return err
 	}
-	client := &http.Client{}
+	client := j.client
 	resp, err := client.Do(req)
 	if err != nil {
 		if j.retries > 0 {
@@ -83,8 +88,7 @@ func (j *Job) Do(wg *sync.WaitGroup) error {
 		return err
 	}
 	defer dst.Close()
-	buf := make([]byte, 1*1024*1024) // 1M buffer
-	_, err = io.CopyBuffer(dst, src, buf)
+	_, err = io.Copy(dst, src)
 	if j.showBar {
 		j.progress.Finish()
 	}

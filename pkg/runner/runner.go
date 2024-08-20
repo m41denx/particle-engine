@@ -1,6 +1,6 @@
 package runner
 
-type ExecutorInterface interface {
+type Executor interface {
 }
 
 type Runner struct {

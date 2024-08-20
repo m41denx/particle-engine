@@ -63,7 +63,7 @@ layer:
 
 recipe:
     - use: fruitspace/gd_android@2.2
-    - apply: gdrainix.xyz/particles/rainix/gd_patcher
+    - apply: https://gdrainix.xyz/particles/rainix/gd_patcher
       env:
         AMOGUS: YES
       command: overriden
@@ -94,3 +94,4 @@ runnable:
 /var
 integrity.json
 ```
+

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/m41denx/particle-engine/pkg/layer"
-	"github.com/m41denx/particle/utils"
+	"github.com/m41denx/particle-engine/utils"
 	"gopkg.in/yaml.v3"
 	"io"
 	"net/http"
@@ -25,7 +25,7 @@ func NewRecipeWorker(ctx *BuildContext, parent *RecipeWorker, manifest Manifest)
 		ctx:      ctx,
 		parent:   parent,
 		manifest: manifest,
-		ldir:     ctx.ldir,
+		ldir:     ctx.homedir,
 	}
 }
 
@@ -94,6 +94,9 @@ func (rw *RecipeWorker) fetchChildren() error {
 		rw.layer = layer.NewLayer(rw.manifest.Layer.Block, rw.ldir, rw.manifest.Layer.Server)
 		rw.ctx.hookAddLayer(rw.layer)
 		rw.ctx.hookPushRecipe(rw)
+	}
+	if rw.manifest.Runnable.Runner == "full" {
+		rw.ctx.runner = "full"
 	}
 	return nil
 }
