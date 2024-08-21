@@ -55,7 +55,7 @@ func CreateLayerFrom(dir string, blankLayer *Layer) (*Layer, error) {
 	return layer, os.Rename(tempFile, layer.filename)
 }
 
-func (l *Layer) Download(particleName string, dlmgr *downloader.Downloader) error {
+func (l *Layer) Download(dlmgr *downloader.Downloader) error {
 	if l.isLocalCopyValid() {
 		return nil
 	}
@@ -63,7 +63,7 @@ func (l *Layer) Download(particleName string, dlmgr *downloader.Downloader) erro
 	httpClient := GetLayerFetcher()
 	job := downloader.NewJob(l.server+l.Hash, "GET", l.filename)
 	job.SetHttpClient(httpClient)
-	job.WithLabel(color.GreenString("→ %s [%s]", particleName, l.Hash))
+	job.WithLabel(color.GreenString("→ %s", l.Hash))
 	dlmgr.AddJob(job)
 	return nil
 }

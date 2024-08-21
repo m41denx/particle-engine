@@ -32,6 +32,8 @@ func (r *MsysRunner) SetStdPipe(writer io.Writer) {
 }
 
 func (r *MsysRunner) CreateEnvironment() error {
+	os.Setenv("CHERE_INVOKING", "yes")
+	os.Setenv("MSYSTEM", "MSYS")
 	return r.Run("whoami", nil)
 }
 

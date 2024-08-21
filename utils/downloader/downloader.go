@@ -14,7 +14,6 @@ type Downloader struct {
 	threads int
 	retries int
 	jobs    []*Job
-	wg      *sync.WaitGroup
 }
 
 func NewDownloader(threads int) *Downloader {
@@ -51,25 +50,24 @@ func (d *Downloader) AddJob(job *Job) {
 }
 
 func (d *Downloader) Do() []error {
-	d.wg = new(sync.WaitGroup)
-	d.wg.Add(len(d.jobs))
-
 	var errs []error
-	for _, job := range d.jobs {
-		job := job
+
+	for i := 0; i < len(d.jobs); i += d.threads {
+		wg := new(sync.WaitGroup)
+		wg.Add(d.threads)
 		go func() {
-			err := job.Do(d.wg)
-			if err != nil {
+			if err := d.jobs[i].Do(wg); err != nil {
 				errs = append(errs, err)
 			}
 		}()
-	}
-	if d.showBar {
-		err := d.pool.Start()
-		if err != nil {
-			errs = append(errs, err)
+		if d.showBar {
+			err := d.pool.Start()
+			if err != nil {
+				errs = append(errs, err)
+			}
 		}
+		wg.Wait()
 	}
-	d.wg.Wait()
+
 	return errs
 }

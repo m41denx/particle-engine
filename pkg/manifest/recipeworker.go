@@ -96,12 +96,7 @@ func (rw *RecipeWorker) fetchChildren() error {
 		rw.ctx.hookPushRecipe(rw)
 	}
 	if rw.manifest.Runnable.Runner == "full" {
-		rw.ctx.runner = "full"
+		rw.ctx.runnerType = "full"
 	}
 	return nil
 }
-
-/* TODO
-крч тут каждый воркер будет смотреть своих детей (ака зависимости) и идти рекурсивно деревцем пока не дойдет до первой базы
-потом пуш слоя партикла в контекст
-*/
