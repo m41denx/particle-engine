@@ -2,6 +2,7 @@ package layer
 
 import (
 	"github.com/fatih/color"
+	"github.com/m41denx/particle-engine/pkg"
 	"github.com/m41denx/particle-engine/utils"
 	"github.com/m41denx/particle-engine/utils/downloader"
 	"os"
@@ -43,7 +44,7 @@ func NewLayer(hash string, dir string, server string) *Layer {
 func CreateLayerFrom(dir string, blankLayer *Layer) (*Layer, error) {
 	tempFile := path.Join(os.TempDir(), "_pbuild_"+time.Now().Format("20060102150405")+".7z")
 	defer os.Remove(tempFile)
-	err := utils.New7Zip().OpenZip(path.Join(os.TempDir(), tempFile)).WorkDir(dir).AddDirectory("").Compress()
+	err := pkg.UnzipProvider.OpenZip(path.Join(os.TempDir(), tempFile)).WorkDir(dir).AddDirectory("").Compress()
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +70,7 @@ func (l *Layer) Download(dlmgr *downloader.Downloader) error {
 }
 
 func (l *Layer) ExtractTo(dest string) (err error) {
-	err = utils.New7Zip().OpenZip(l.filename).Decompress(dest)
+	err = pkg.UnzipProvider.OpenZip(l.filename).Decompress(dest)
 	if err != nil {
 		return err
 	}
