@@ -67,7 +67,7 @@ func (r *BusyboxRunner) Run(shellCommand string, env map[string]string) error {
 	for k, v := range env {
 		environ = append(environ, k+"="+v)
 	}
-	cmd := exec.Command(path.Join(r.workdir, "usr", "bin", "busybox.exe"), "bash", "-lc", shellCommand)
+	cmd := exec.Command(path.Join(r.workdir, "usr", "bin", "busybox.exe"), "bash", "-c", shellCommand)
 	cmd.Env = environ
 	cmd.Dir = r.workdir
 	cmd.Stdout = r.stdout
@@ -75,6 +75,6 @@ func (r *BusyboxRunner) Run(shellCommand string, env map[string]string) error {
 	return cmd.Run()
 }
 
-func (r *BusyboxRunner) Copy(from string, to string) error {
-	return r.Run("cp "+shellescape.Quote(from)+" "+shellescape.Quote(to), nil)
+func (r *BusyboxRunner) Copy(from string, to string, env map[string]string) error {
+	return r.Run("cp "+shellescape.Quote(from)+" "+shellescape.Quote(to), env)
 }
