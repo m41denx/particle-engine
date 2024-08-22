@@ -20,7 +20,7 @@ var NUMCPU = func() int {
 	} else {
 		ncpu, _ = strconv.Atoi(numcpu)
 	}
-	if ncpu > 4 {
+	if ncpu > 4 || ncpu < 1 {
 		ncpu = 4
 	}
 	return ncpu

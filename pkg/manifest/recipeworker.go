@@ -8,8 +8,10 @@ import (
 	"github.com/m41denx/particle-engine/utils"
 	"gopkg.in/yaml.v3"
 	"io"
+	"maps"
 	"net/http"
 	"path"
+	"slices"
 )
 
 type RecipeWorker struct {
@@ -116,28 +118,44 @@ func (rw *RecipeWorker) ExtractLayer(destdir string, isRootfs bool) error {
 	}
 }
 
-func (rw *RecipeWorker) RunAppliance(destdir string) error {
+func (rw *RecipeWorker) RunAppliance(destdir string, override RecipeLayerStanza) error {
 	if len(rw.manifest.Runnable.Build) == 0 {
 		return nil // Might as well be static particle
 	}
 
-	for _, action := range rw.manifest.Runnable.Build {
-		// Set env for copying
-		env := map[string]string{}
-		if rw.ctx.runnerType == "full" {
-			env = map[string]string{
-				"ROOTFS": path.Join("/"),
-				"BUILD":  path.Join("/", "build"),
-				"MOD":    path.Join("/", "runnable", rw.manifest.Name),
-			}
-		} else {
-			// Busybox maps root as Windows fullpath
-			env = map[string]string{
-				"ROOTFS": path.Join(destdir),
-				"BUILD":  path.Join(destdir, "build"),
-				"MOD":    path.Join(destdir, "runnable", rw.manifest.Name),
-			}
+	globEnv := map[string]string{}
+	if override.Env != nil {
+		globEnv = maps.Clone(override.Env)
+	}
+	if rw.ctx.runnerType == "full" {
+		maps.Copy(globEnv, map[string]string{
+			"ROOTFS": path.Join("/"),
+			"BUILD":  path.Join("/", "build"),
+			"MOD":    path.Join("/", "runnable", rw.manifest.Name),
+		})
+	} else {
+		// Busybox maps root as Windows fullpath
+		maps.Copy(globEnv, map[string]string{
+			"ROOTFS": path.Join(destdir),
+			"BUILD":  path.Join(destdir, "build"),
+			"MOD":    path.Join(destdir, "runnable", rw.manifest.Name),
+		})
+	}
+
+	actions := slices.Clone(rw.manifest.Runnable.Build)
+
+	// Weird override af, but who knows
+	if override.Command != "" {
+		actions = []RunnableBuildStanza{
+			{
+				Run: override.Command,
+			},
 		}
+	}
+
+	for _, action := range actions {
+		// Set env for copying
+		env := maps.Clone(globEnv)
 
 		if len(action.Run) > 0 {
 			// If we run, we run
