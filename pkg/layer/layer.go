@@ -22,12 +22,12 @@ type Layer struct {
 	Size      int64
 
 	//For download
-	dir      string
+	homedir  string
 	filename string
 	server   string
 }
 
-func NewLayer(hash string, dir string, server string) *Layer {
+func NewLayer(hash string, homedir string, server string) *Layer {
 	if server == "" {
 		server = DefaultLayerRepo
 	}
@@ -35,8 +35,8 @@ func NewLayer(hash string, dir string, server string) *Layer {
 		Hash:      hash,
 		Files:     []string{},
 		Deletions: []string{},
-		dir:       dir,
-		filename:  path.Join(dir, "layers", hash+".7z"),
+		homedir:   homedir,
+		filename:  path.Join(homedir, "layers", hash+".7z"),
 		server:    server,
 	}
 }
@@ -52,7 +52,7 @@ func CreateLayerFrom(dir string, blankLayer *Layer) (*Layer, error) {
 	if err != nil {
 		return nil, err
 	}
-	layer := NewLayer(hash, blankLayer.dir, blankLayer.server)
+	layer := NewLayer(hash, blankLayer.homedir, blankLayer.server)
 	return layer, os.Rename(tempFile, layer.filename)
 }
 
