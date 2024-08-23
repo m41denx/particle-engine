@@ -36,6 +36,12 @@ func CalcFileHash(dp string) (string, error) {
 	return fmt.Sprintf("%x", hash.Sum(nil)), nil
 }
 
+func CalcHash(b []byte) string {
+	hash := sha256.New()
+	hash.Write(b)
+	return fmt.Sprintf("%x", hash.Sum(nil))
+}
+
 func LDir(srcDir string, prefix string) []string {
 	files, err := os.ReadDir(filepath.Clean(srcDir))
 	if err != nil {

@@ -82,6 +82,11 @@ func (m *Manifest) SaveTo(dest string) {
 	os.WriteFile(dest, d, 0755)
 }
 
+func (m *Manifest) ToYaml() string {
+	d, _ := yaml.Marshal(m)
+	return string(d)
+}
+
 func NewManifest(name string) Manifest {
 	return Manifest{
 		Name: name,
