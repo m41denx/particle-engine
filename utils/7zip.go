@@ -16,7 +16,9 @@ type SevenZip struct {
 
 func New7Zip() *SevenZip {
 	p := path.Join(os.TempDir(), SevenZipName)
-	os.WriteFile(p, SevenZipExecutable, 0750)
+	if err := os.WriteFile(p, SevenZipExecutable, 0777); err != nil {
+		panic(err)
+	}
 	return &SevenZip{binpath: p}
 }
 

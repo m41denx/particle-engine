@@ -10,36 +10,36 @@ import (
 	"path"
 )
 
-func NewCmdBuild() *CmdBuild {
-	cmd := &CmdBuild{
-		fs: flag.NewFlagSet("build", flag.ExitOnError),
+func NewCmdEnter() *CmdEnter {
+	cmd := &CmdEnter{
+		fs: flag.NewFlagSet("enter", flag.ExitOnError),
 	}
 
 	return cmd
 }
 
-type CmdBuild struct {
+type CmdEnter struct {
 	dir string
 	fs  *flag.FlagSet
 }
 
-func (cmd *CmdBuild) Name() string {
+func (cmd *CmdEnter) Name() string {
 	return cmd.fs.Name()
 }
 
-func (cmd *CmdBuild) Help() string {
+func (cmd *CmdEnter) Help() string {
 	return `
-Usage: ` + color.CyanString(binName+" build <path>") + `
+Usage: ` + color.CyanString(binName+" enter <path>") + `
 
-  This command builds prepared(!) particle at <path>.
+  This command enters prepared(!) particle environment at <path>.
 
-  Example: ` + binName + ` build ~/particle
+  Example: ` + binName + ` enter ~/particle
 
   Please see the individual subcommand help for detailed usage information.
 `
 }
 
-func (cmd *CmdBuild) Init(args []string) (err error) {
+func (cmd *CmdEnter) Init(args []string) (err error) {
 	err = cmd.fs.Parse(args)
 	if err != nil {
 		return
@@ -52,13 +52,13 @@ func (cmd *CmdBuild) Init(args []string) (err error) {
 	return
 }
 
-func (cmd *CmdBuild) Run() error {
+func (cmd *CmdEnter) Run() error {
 	manif, err := manifest.NewManifestFromFile(path.Join(cmd.dir, "particle.yaml"))
 	if err != nil {
 		return err
 	}
 	ctx := build.NewBuildContext(manif, cmd.dir, pkg.Config)
-	if err := ctx.Build(); err != nil {
+	if err := ctx.Enter(); err != nil {
 		return err
 	}
 	return nil

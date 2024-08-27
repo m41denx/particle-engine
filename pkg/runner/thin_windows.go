@@ -72,6 +72,7 @@ func (r *BusyboxRunner) Run(shellCommand string, env map[string]string) error {
 	cmd.Dir = r.workdir
 	cmd.Stdout = r.stdout
 	cmd.Stderr = r.stderr
+	cmd.Stdin = os.Stdin
 	return cmd.Run()
 }
 

@@ -43,7 +43,7 @@ func NewLayer(hash string, homedir string, server string) *Layer {
 func CreateLayerFrom(dir string, blankLayer *Layer) (*Layer, error) {
 	tempFile := path.Join(os.TempDir(), "_pbuild_"+time.Now().Format("20060102150405")+".7z")
 	defer os.Remove(tempFile)
-	err := pkg.UnzipProvider.OpenZip(path.Join(os.TempDir(), tempFile)).WorkDir(dir).AddDirectory("").Compress()
+	err := pkg.UnzipProvider.OpenZip(tempFile).WorkDir(dir).AddDirectory("").Compress()
 	if err != nil {
 		return nil, err
 	}

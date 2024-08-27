@@ -50,6 +50,7 @@ func (r *MsysRunner) Run(shellCommand string, env map[string]string) error {
 	cmd.Env = environ
 	cmd.Stdout = r.stdout
 	cmd.Stderr = r.stderr
+	cmd.Stdin = os.Stdin
 	return cmd.Run()
 }
 

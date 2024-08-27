@@ -40,6 +40,7 @@ func main() {
 		NewCmdInit(),
 		NewCmdPrepare(),
 		NewCmdBuild(),
+		NewCmdEnter(),
 		NewCmdVersion(),
 	}
 
@@ -73,6 +74,7 @@ Commands:
 	init		Initializes blank particle directory
 	prepare		Prepares particle from manifest
 	build		Builds particle after preparations and modifications
+	enter		Enters particle environment shell
 	export		Exports particle distribution
 	auth		Logs you into remote repository account
 	publish		Publishes your particle to remote repository
