@@ -1,6 +1,6 @@
 package webserver
 
-import "github.com/m41denx/particle/webserver/db"
+import "github.com/m41denx/particle-engine/pkg/webserver/db"
 
 type UserResponse struct {
 	db.User

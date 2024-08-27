@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"encoding/json"
 	"gopkg.in/yaml.v3"
 	"os"
 	"strings"
@@ -10,27 +11,27 @@ import (
 const DefaultRepo = "http://127.0.0.1:8000/repo/"
 
 type Manifest struct {
-	Name     string              `yaml:"name"`
-	Meta     Meta                `yaml:"meta,omitempty"`
-	Layer    LayerStanza         `yaml:"layer"`
-	Recipe   []RecipeLayerStanza `yaml:"recipe"`
-	Runnable RunnableStanza      `yaml:"runnable,omitempty"`
+	Name     string              `yaml:"name" json:"name"`
+	Meta     Meta                `yaml:"meta,omitempty" json:"meta,omitempty"`
+	Layer    LayerStanza         `yaml:"layer" json:"layer"`
+	Recipe   []RecipeLayerStanza `yaml:"recipe" json:"recipe"`
+	Runnable RunnableStanza      `yaml:"runnable,omitempty" json:"runnable,omitempty"`
 }
 
 type Meta map[string]string
 
 type LayerStanza struct {
-	Block  string `yaml:"block"`
-	Server string `yaml:"server,omitempty"`
+	Block  string `yaml:"block" json:"block"`
+	Server string `yaml:"server,omitempty" json:"server,omitempty"`
 }
 
 // region RecipeLayerStanza
 
 type RecipeLayerStanza struct {
-	UseParticle   string `yaml:"use,omitempty"`
-	ApplyParticle string `yaml:"apply,omitempty"`
-	Env           Meta   `yaml:"env,omitempty"`
-	Command       string `yaml:"command,omitempty"`
+	UseParticle   string `yaml:"use,omitempty" json:"use,omitempty"`
+	ApplyParticle string `yaml:"apply,omitempty" json:"apply,omitempty"`
+	Env           Meta   `yaml:"env,omitempty" json:"env,omitempty"`
+	Command       string `yaml:"command,omitempty" json:"command,omitempty"`
 }
 
 func (m *RecipeLayerStanza) GetParticle() string {
@@ -48,16 +49,16 @@ func (m *RecipeLayerStanza) GetParticle() string {
 // region RunnableStanza
 
 type RunnableStanza struct {
-	Runner  string                `yaml:"runner,omitempty"`
-	Require []RecipeLayerStanza   `yaml:"require,omitempty"`
-	Build   []RunnableBuildStanza `yaml:"build"`
-	Expose  Meta                  `yaml:"expose,omitempty"`
+	Runner  string                `yaml:"runner,omitempty" json:"runner,omitempty"`
+	Require []RecipeLayerStanza   `yaml:"require,omitempty" json:"require,omitempty"`
+	Build   []RunnableBuildStanza `yaml:"build" json:"build"`
+	Expose  Meta                  `yaml:"expose,omitempty" json:"expose,omitempty"`
 }
 
 type RunnableBuildStanza struct {
-	Run             string `yaml:"run,omitempty"`
-	CopySource      string `yaml:"copy,omitempty"`
-	CopyDestination string `yaml:"to,omitempty"`
+	Run             string `yaml:"run,omitempty" json:"run,omitempty"`
+	CopySource      string `yaml:"copy,omitempty" json:"copy,omitempty"`
+	CopyDestination string `yaml:"to,omitempty" json:"to,omitempty"`
 }
 
 // endregion
@@ -84,6 +85,11 @@ func (m *Manifest) SaveTo(dest string) {
 
 func (m *Manifest) ToYaml() string {
 	d, _ := yaml.Marshal(m)
+	return string(d)
+}
+
+func (m *Manifest) ToJson() string {
+	d, _ := json.Marshal(m)
 	return string(d)
 }
 

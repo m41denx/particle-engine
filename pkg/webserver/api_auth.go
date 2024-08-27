@@ -2,7 +2,7 @@ package webserver
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/m41denx/particle/webserver/db"
+	"github.com/m41denx/particle-engine/pkg/webserver/db"
 )
 
 func auth(c *fiber.Ctx) (user db.User, err error) {

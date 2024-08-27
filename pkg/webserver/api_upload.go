@@ -2,11 +2,12 @@ package webserver
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/m41denx/particle/structs"
-	"github.com/m41denx/particle/utils"
-	"github.com/m41denx/particle/webserver/db"
+	"github.com/m41denx/particle-engine/pkg/manifest"
+	"github.com/m41denx/particle-engine/pkg/webserver/db"
+	"github.com/m41denx/particle-engine/utils"
 	"golang.org/x/exp/slices"
 	"log"
 	"regexp"
@@ -35,6 +36,7 @@ func apiUploadManifest(c *fiber.Ctx) error {
 	name := c.Params("name")
 	version := c.Params("version")
 	arch := c.Params("arch")
+	author := c.Params("author")
 
 	if name == "" || version == "" || arch == "" {
 		return c.Status(400).JSON(ErrorResponse{
@@ -62,18 +64,18 @@ func apiUploadManifest(c *fiber.Ctx) error {
 		})
 	}
 
-	var manifest structs.Manifest
-	err = c.BodyParser(&manifest)
+	var manif manifest.Manifest
+	err = c.BodyParser(&manif)
 	if err != nil {
 		return c.Status(400).JSON(ErrorResponse{
 			Message: err.Error(),
 		})
 	}
 
-	manifest.Author = user.Username
-	manifest.Name = name + "@" + version
+	manif.Meta["author"] = author
+	manif.Name = name + "@" + version
 
-	mb, err := json.Marshal(manifest)
+	mb, err := json.Marshal(manif)
 	if err != nil {
 		return c.Status(500).JSON(ErrorResponse{
 			Message: err.Error(),
@@ -82,35 +84,62 @@ func apiUploadManifest(c *fiber.Ctx) error {
 
 	recipe := strings.ReplaceAll(string(mb), "\n", "\\n")
 
+	if !user.IsAdmin && author != user.Username {
+		// Only admins can upload for other users
+		return c.Status(403).JSON(ErrorResponse{
+			Message: "You aren't allowed to upload for other users",
+		})
+	}
+
 	particle := db.Particle{
 		Name:        name,
-		Author:      user.Username,
+		Author:      author,
 		UID:         user.ID,
-		Arch:        arch,
-		LayerID:     manifest.Block,
-		Version:     version,
-		Description: manifest.Note,
-		Recipe:      recipe,
-		Size:        0,
+		Description: fmt.Sprintf("# %s/%s\n--\n", author, manif.Name),
+		Layers:      make([]db.ParticleLayer, 0),
 		IsPrivate:   c.QueryBool("private"),
 		IsUnlisted:  c.QueryBool("unlisted"),
 	}
 
+	layer := db.ParticleLayer{
+		Arch:    arch,
+		LayerID: manif.Layer.Block,
+		Version: version,
+		Recipe:  recipe,
+	}
+
 	var oldParticle db.Particle
 	ex := DB.Model(db.Particle{}).Where(db.Particle{
-		Name:    particle.Name,
-		UID:     particle.UID,
-		Version: particle.Version,
-		Arch:    arch,
-	}).Select("id").Find(&oldParticle).Error
+		Name:   particle.Name,
+		UID:    particle.UID,
+		Author: author,
+	}).Preload("Layers").Select("id").Find(&oldParticle).Error
 
 	if ex == nil {
+		// particle exists
 		particle.ID = oldParticle.ID
-		//Remove
-		err = FS.DeleteFile(oldParticle.LayerID)
-		if err != nil {
-			log.Println(err)
+		particle.IsPrivate = oldParticle.IsPrivate
+		particle.IsUnlisted = oldParticle.IsUnlisted
+	}
+
+	for _, p := range particle.Layers {
+		if p.Version == version && p.Arch == arch {
+			// layer exists
+			if p.LayerID != manif.Layer.Block {
+				// hashes differ, delete old layer
+				if err := FS.DeleteFile(p.LayerID); err != nil {
+					log.Println(err)
+				}
+			}
+
+			ex = errors.New("layer exists")
+			p = layer
 		}
+	}
+
+	if ex == nil {
+		// No such layer exists
+		particle.Layers = append(particle.Layers, layer)
 	}
 
 	err = DB.Save(&particle).Error
@@ -124,7 +153,7 @@ func apiUploadManifest(c *fiber.Ctx) error {
 
 func apiUploadLayer(c *fiber.Ctx) error {
 	user, err := auth(c)
-	if user.ID == 0 || err != nil {
+	if err != nil || user.ID == 0 {
 		return c.Status(403).JSON(ErrorResponse{
 			Message: "Invalid credentials",
 		})
@@ -133,10 +162,18 @@ func apiUploadLayer(c *fiber.Ctx) error {
 	name := c.Params("name")
 	version := c.Params("version")
 	arch := c.Params("arch")
+	author := c.Params("author")
 
 	if name == "" || version == "" || arch == "" {
 		return c.Status(400).JSON(ErrorResponse{
 			Message: "Invalid parameters",
+		})
+	}
+
+	if !user.IsAdmin && author != user.Username {
+		// Only admins can upload for other users
+		return c.Status(403).JSON(ErrorResponse{
+			Message: "You aren't allowed to upload for other users",
 		})
 	}
 
@@ -146,8 +183,21 @@ func apiUploadLayer(c *fiber.Ctx) error {
 		fmt.Println(metrics.DumpText())
 	}()
 
+	var particle db.Particle
+	if err := DB.Model(db.Particle{}).Where(db.Particle{UID: user.ID, Name: name}).Find(&particle).Error; err != nil {
+		return c.Status(401).JSON(ErrorResponse{
+			Message: "Particle doesn't exist",
+		})
+	}
+
+	metrics.NewStep("Counting layers sizes")
+
 	var sz *uint
-	DB.Model(db.Particle{}).Where(db.Particle{UID: user.ID}).Select("sum(size)").Scan(&sz)
+	// SELECT sum(particle_layers.size) FROM particle_layers JOIN particles ON particle_layers.particle_id=particles.id WHERE particles.uid=1
+	if err := DB.Model(db.ParticleLayer{}).Joins("JOIN particles ON particle_layers.particle_id=particles.id").
+		Where(db.Particle{UID: user.ID}).Select("sum(particle_layers.size)").Scan(&sz).Error; err != nil {
+		log.Println(err)
+	}
 
 	if sz == nil {
 		sz = new(uint)
@@ -157,6 +207,11 @@ func apiUploadLayer(c *fiber.Ctx) error {
 	metrics.NewStep("Parsing Multipart")
 
 	mpfd, err := c.MultipartForm()
+	if err != nil {
+		return c.Status(500).JSON(ErrorResponse{
+			Message: err.Error(),
+		})
+	}
 	layers := mpfd.File["layer"]
 	if len(layers) == 0 {
 		return c.Status(400).JSON(ErrorResponse{
@@ -180,23 +235,22 @@ func apiUploadLayer(c *fiber.Ctx) error {
 		})
 	}
 
-	var particle db.Particle
-	err = DB.Where(db.Particle{
-		Name:    name,
-		Author:  user.Username,
-		Version: version,
-		Arch:    arch,
-		LayerID: layerID,
-	}).Find(&particle).Error
+	var particleLayer db.ParticleLayer
+	err = DB.Where(db.ParticleLayer{
+		ParticleID: particle.ID,
+		Arch:       arch,
+		Version:    version,
+		LayerID:    layerID,
+	}).Find(&particleLayer).Error
 	if err != nil {
 		return c.Status(500).JSON(ErrorResponse{
 			Message: err.Error(),
 		})
 	}
 
-	particle.Size = uint(layer.Size)
+	particleLayer.Size = uint(layer.Size)
 
-	err = DB.Updates(particle).Error
+	err = DB.Updates(particleLayer).Error
 	if err != nil {
 		return c.Status(500).JSON(ErrorResponse{
 			Message: err.Error(),

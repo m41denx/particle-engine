@@ -2,10 +2,9 @@ package webserver
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/m41denx/particle/structs"
-	"github.com/m41denx/particle/webserver/db"
+	"github.com/m41denx/particle-engine/pkg/manifest"
+	"github.com/m41denx/particle-engine/pkg/webserver/db"
 	"gorm.io/gorm"
 	"log"
 )
@@ -22,25 +21,37 @@ func apiFetchManifest(c *fiber.Ctx) (err error) {
 	ver := c.Params("version")
 
 	var particle db.Particle
+
+	err = DB.Where(db.Particle{
+		Name:   c.Params("name"),
+		Author: c.Params("author"),
+	}).First(&particle).Error
+
+	if err != nil {
+		return c.Status(404).JSON(ErrorResponse{
+			Message: "Particle not found",
+		})
+	}
+
+	var layer db.ParticleLayer
+
 	if ver == "latest" || ver == "" {
 		// Fetch latest matching
-		err = DB.Where(db.Particle{
-			Name:   c.Params("name"),
-			Author: c.Params("author"),
-			Arch:   c.Params("arch"),
-		}).Order("updated_at DESC").First(&particle).Error
+		err = DB.Where(db.ParticleLayer{
+			ParticleID: particle.ID,
+			Arch:       c.Params("arch"),
+		}).Order("updated_at DESC").First(&layer).Error
 	} else {
 		// Strict verison
-		err = DB.Where(db.Particle{
-			Name:    c.Params("name"),
-			Author:  c.Params("author"),
-			Version: ver,
-			Arch:    c.Params("arch"),
+		err = DB.Where(db.ParticleLayer{
+			ParticleID: particle.ID,
+			Version:    ver,
+			Arch:       c.Params("arch"),
 		}).Order("updated_at DESC").First(&particle).Error
 	}
 	if err != nil {
 		return c.Status(404).JSON(ErrorResponse{
-			Message: "Particle not found",
+			Message: "Particle version not found",
 		})
 	}
 
@@ -51,20 +62,24 @@ func apiFetchManifest(c *fiber.Ctx) (err error) {
 		})
 	}
 
-	var manifest structs.Manifest
-	err = json.Unmarshal([]byte(particle.Recipe), &manifest)
+	var manif manifest.Manifest
+	err = json.Unmarshal([]byte(layer.Recipe), &manif)
 	if err != nil {
 		return c.Status(500).JSON(ErrorResponse{
 			Message: err.Error(),
 		})
 	}
 
-	fmt.Println(DB.Model(db.Particle{}).Where("id = ?", particle.ID).Update("downloads", gorm.Expr("downloads + 1")).Error)
+	if err := DB.Model(db.ParticleLayer{}).Where(db.ParticleLayer{LayerID: layer.LayerID}).Update(
+		"downloads", gorm.Expr("downloads + 1"),
+	).Error; err != nil {
+		log.Println(err)
+	}
 
-	manifest.Name = particle.Name
-	manifest.Author = particle.Author
+	manif.Name = particle.Name
+	manif.Meta["author"] = particle.Author
 
-	return c.JSON(manifest)
+	return c.SendString(manif.ToYaml())
 }
 
 func apiPullLayer(c *fiber.Ctx) error {
