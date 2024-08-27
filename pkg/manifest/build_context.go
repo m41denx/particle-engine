@@ -11,10 +11,12 @@ import (
 	"github.com/m41denx/particle-engine/structs"
 	"github.com/m41denx/particle-engine/utils"
 	"github.com/m41denx/particle-engine/utils/downloader"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"slices"
+	"strings"
 )
 
 type BuildContext struct {
@@ -35,7 +37,7 @@ func NewBuildContext(manifest Manifest, ldir string, config *structs.Config) *Bu
 	home, _ := os.UserCacheDir()
 	pc := filepath.Join(home, "particle_cache")
 	bdir := path.Join(pc, "temp", utils.CalcHash([]byte(manifest.ToYaml())))
-	os.MkdirAll(bdir, 0750)
+	_ = os.MkdirAll(bdir, 0750)
 	return &BuildContext{
 		Manifest:          manifest,
 		config:            config,
@@ -52,14 +54,20 @@ func NewBuildContext(manifest Manifest, ldir string, config *structs.Config) *Bu
 
 func (ctx *BuildContext) FetchDependencies() error {
 	headWorker := NewRecipeWorker(ctx, nil, ctx.Manifest)
-	if err := headWorker.fetchChildren(); err != nil {
+	prg := utils.NewTreeProgress()
+	err := prg.TrackFunction(color.CyanString("Fetching dependencies..."), headWorker.fetchChildren)
+	if err != nil {
 		return err
 	}
-	fmt.Printf("%#v", ctx)
+	fmt.Println(color.BlueString(
+		"Need to download %d layers for Manifest %s",
+		len(ctx.layers), path.Base(ctx.builddir)[:12],
+	))
 	return nil
 }
 
 func (ctx *BuildContext) PrepareEnvironment() error {
+	prg := utils.NewTreeProgress()
 	if err := ctx.fetchRunner(); err != nil {
 		return err
 	}
@@ -72,11 +80,16 @@ func (ctx *BuildContext) PrepareEnvironment() error {
 	for i, worker := range ctx.longrecipe {
 		if len(worker.manifest.Runnable.Build) > 0 && !ctx.touchedAppliances {
 			ctx.touchedAppliances = true
-			if err := ctx.calculateIntegrityHash(); err != nil {
+			if err := prg.TrackFunction(
+				color.BlueString("Calculating integrity hashes..."), ctx.calculateIntegrityHash,
+			); err != nil {
 				return err
 			}
 		}
-		if err := worker.ExtractLayer(ctx.builddir, i == 0); err != nil {
+		err := prg.TrackFunction(color.BlueString("Extracting %s...", worker.manifest.Name), func() error {
+			return worker.ExtractLayer(ctx.builddir, i == 0)
+		})
+		if err != nil {
 			return err
 		}
 		if i == 0 {
@@ -86,7 +99,17 @@ func (ctx *BuildContext) PrepareEnvironment() error {
 			continue
 		}
 		// FIXME: WHERE THE FUCK ARE OVERRIDES AND HOW ARE WE GONNA SHOVE THEM INTO THE ENVIRONMENT
-		if err := worker.RunAppliance(ctx.builddir, RecipeLayerStanza{}); err != nil {
+		err = prg.TrackFunction(color.BlueString("Running %s...", worker.manifest.Name), func() error {
+			return worker.RunAppliance(ctx.builddir, RecipeLayerStanza{})
+		})
+		if err != nil {
+			return err
+		}
+	}
+	if len(ctx.integrityData) == 0 {
+		if err := prg.TrackFunction(
+			color.BlueString("Calculating integrity hashes..."), ctx.calculateIntegrityHash,
+		); err != nil {
 			return err
 		}
 	}
@@ -114,6 +137,32 @@ func (ctx *BuildContext) DownloadLayers() error {
 	return nil
 }
 
+func (ctx *BuildContext) Build() error {
+	fmt.Println(color.CyanString("Building particle %s...", ctx.Manifest.Name))
+	prg := utils.NewTreeProgress()
+	if err := prg.TrackFunction(color.BlueString("Verifying contents..."), ctx.buildDiff); err != nil {
+		return err
+	}
+	if err := prg.TrackFunction(color.BlueString("Building layer..."), ctx.makeLayer); err != nil {
+		return err
+	}
+	ctx.Manifest.SaveTo(path.Join(ctx.ldir, "particle.yaml"))
+	return nil
+}
+
+func (ctx *BuildContext) makeLayer() error {
+	buildcacheDir := path.Join(ctx.builddir, "tmp", "buildcache")
+	l, err := layer.CreateLayerFrom(buildcacheDir, layer.NewLayer("", ctx.homedir, ""))
+	if err != nil {
+		return err
+	}
+	if err := os.RemoveAll(buildcacheDir); err != nil {
+		return err
+	}
+	ctx.Manifest.Layer.Block = l.Hash
+	return nil
+}
+
 func (ctx *BuildContext) fetchRunner() error {
 	if ctx.runnerType == "full" {
 		ctx.runnerInstance = runner.NewFullRunner(ctx.builddir)
@@ -128,8 +177,10 @@ func (ctx *BuildContext) fetchRunner() error {
 	if err != nil {
 		return err
 	}
-	l := layer.NewLayer(worker.manifest.Layer.Block, ctx.homedir, worker.manifest.Layer.Server)
-	ctx.hookAddLayer(l)
+	if worker.manifest.Name != "blank" {
+		l := layer.NewLayer(worker.manifest.Layer.Block, ctx.homedir, worker.manifest.Layer.Server)
+		ctx.hookAddLayer(l)
+	}
 	ctx.longrecipe = slices.Concat([]*RecipeWorker{worker}, ctx.longrecipe)
 	return nil
 }
@@ -151,6 +202,66 @@ func (ctx *BuildContext) calculateIntegrityHash() error {
 		return err
 	}
 	return os.WriteFile(path.Join(ctx.builddir, "integrity.json"), integr, 0755)
+}
+
+func (ctx *BuildContext) buildDiff() error {
+	buildcacheDir := filepath.Join(ctx.builddir, "tmp", "buildcache")
+	if err := os.RemoveAll(buildcacheDir); err != nil {
+		return err
+	}
+	prg := utils.NewTreeProgress()
+	if err := prg.TrackFunction(
+		color.BlueString("Calculating integrity hashes..."), ctx.calculateIntegrityHash,
+	); err != nil {
+		return err
+	}
+	oldHashes := make(map[string]string)
+	deletions := make([]string, 0)
+	d, err := os.ReadFile(filepath.Join(ctx.builddir, "integrity.json"))
+	if err != nil || json.Unmarshal(d, &oldHashes) != nil {
+		return errors.New("unable to read integrity.json")
+	}
+
+	for file, newHash := range ctx.integrityData {
+		oldHash, ok := oldHashes[file]
+		if ok && newHash == oldHash {
+			continue
+		}
+		fmt.Println(color.GreenString("+ %s [%s]", file, newHash[:12]))
+		_ = os.MkdirAll(filepath.Dir(filepath.Join(buildcacheDir, file)), 0755)
+		fh, err1 := os.Open(filepath.Join(ctx.builddir, "build", file))
+		nh, err2 := os.Create(filepath.Join(buildcacheDir, file))
+		if err1 != nil || err2 != nil {
+			return errors.Join(err1, err2)
+		}
+
+		_, err3 := io.Copy(nh, fh)
+		_ = fh.Close()
+		_ = nh.Close()
+		if err3 != nil {
+			return err3
+		}
+	}
+
+	for file, oldHash := range oldHashes {
+		_, ok := ctx.integrityData[file]
+		if ok {
+			continue
+		}
+		fmt.Println(color.RedString("- %s [%s]", file, oldHash[:12]))
+		deletions = append(deletions, file)
+	}
+
+	if len(deletions) > 0 {
+		deletionsData := strings.Join(deletions, "\n")
+		if err = os.WriteFile(
+			filepath.Join(buildcacheDir, ".deletions"), []byte(deletionsData), 0755,
+		); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (ctx *BuildContext) installRunner() error {
