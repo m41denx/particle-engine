@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/m41denx/particle-engine/pkg"
-	"github.com/m41denx/particle-engine/pkg/build"
+	"github.com/m41denx/particle-engine/pkg/builder"
 	"github.com/m41denx/particle-engine/pkg/manifest"
 	"path"
 )
@@ -57,7 +57,7 @@ func (cmd *CmdEnter) Run() error {
 	if err != nil {
 		return err
 	}
-	ctx := build.NewBuildContext(manif, cmd.dir, pkg.Config)
+	ctx := builder.NewBuildContext(manif, cmd.dir, pkg.Config)
 	if err := ctx.Enter(); err != nil {
 		return err
 	}

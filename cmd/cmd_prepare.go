@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/m41denx/particle-engine/pkg"
+	"github.com/m41denx/particle-engine/pkg/builder"
 	"github.com/m41denx/particle-engine/pkg/manifest"
 	"path"
 )
