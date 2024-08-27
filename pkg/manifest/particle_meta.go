@@ -15,6 +15,15 @@ type ParticleMeta struct {
 
 func ParseParticleURL(url string) (ParticleMeta, error) {
 	meta := ParticleMeta{}
+	if url == "blank" {
+		return ParticleMeta{
+			Server:   DefaultRepo,
+			User:     "",
+			Name:     "blank",
+			Fullname: "blank",
+			Tag:      "",
+		}, nil
+	}
 	re := regexp.MustCompile("^(?P<server>http(s)?://[a-zA-Z0-9_./-]+/)?(?P<user>[a-z0-9-]+)/(?P<name>[a-z0-9-_.]+)(?P<tag>@[a-z0-9.-]+)?$")
 
 	matches := re.FindStringSubmatch(url)

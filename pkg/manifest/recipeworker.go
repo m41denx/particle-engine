@@ -33,6 +33,12 @@ func NewRecipeWorker(ctx *BuildContext, parent *RecipeWorker, manifest Manifest)
 }
 
 func NewRecipeWorkerFromURL(ctx *BuildContext, parent *RecipeWorker, meta ParticleMeta) (*RecipeWorker, error) {
+	if meta.Fullname == "blank" {
+		return NewRecipeWorker(ctx, parent, Manifest{
+			Name: "blank",
+		}), nil
+	}
+
 	manifestURL := fmt.Sprintf("%s%s/%s.yaml", meta.Server, meta.Fullname, utils.GetArchString())
 	req, err := http.NewRequest("GET", manifestURL, nil)
 	if err != nil {
@@ -106,6 +112,9 @@ func (rw *RecipeWorker) fetchChildren() error {
 }
 
 func (rw *RecipeWorker) ExtractLayer(destdir string, isRootfs bool) error {
+	if rw.manifest.Name == "blank" {
+		return nil
+	}
 	if isRootfs {
 		return rw.layer.ExtractTo(destdir)
 	}

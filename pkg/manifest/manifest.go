@@ -104,3 +104,13 @@ func NewManifest(name string) Manifest {
 		},
 	}
 }
+
+func NewManifestFromFile(path string) (Manifest, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return NewManifest(""), err
+	}
+	var m Manifest
+	err = yaml.Unmarshal(data, &m)
+	return m, err
+}

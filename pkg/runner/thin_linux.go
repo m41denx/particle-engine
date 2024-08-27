@@ -25,7 +25,7 @@ func NewThinRunner(workdir string) *BusyboxRunner {
 }
 
 func (r *BusyboxRunner) GetDependencyString() string {
-	return "core/busybox@latest"
+	return "blank"
 }
 
 func (r *BusyboxRunner) SetStdPipe(writer io.Writer) {

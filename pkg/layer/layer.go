@@ -9,7 +9,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"time"
 )
 
@@ -90,17 +89,16 @@ func (l *Layer) ExtractTo(dest string) (err error) {
 			}
 		}
 	}
-	os.Remove(filepath.Join(dest, ".deletions"))
+	_ = os.Remove(filepath.Join(dest, ".deletions"))
 	return nil
 }
 
 func (l *Layer) isLocalCopyValid() bool {
-	var stat syscall.Stat_t
-	err := syscall.Stat(l.filename, &stat)
+	stat, err := os.Stat(l.filename)
 	if err != nil {
 		return false
 	}
-	l.Size = stat.Size
+	l.Size = stat.Size()
 	hash, err := utils.CalcFileHash(l.filename)
 	if err != nil {
 		return false

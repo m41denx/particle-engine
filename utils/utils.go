@@ -15,13 +15,7 @@ import (
 	"sync"
 )
 
-const GitIgnore = `bin/
-dist/
-engines/
-out/
-src/`
-
-var SUPPORTED_ARCH = []string{"w32", "w64", "l64", "l64a", "d64", "d64a"}
+var SUPPORTED_ARCH = []string{"w64", "l64", "l64a", "d64", "d64a"}
 
 func CalcFileHash(dp string) (string, error) {
 	hash := sha256.New()
@@ -90,10 +84,10 @@ func GetArchString() string {
 func PrepareStorage() string {
 	home, _ := os.UserCacheDir()
 	pc := filepath.Join(home, "particle_cache")
-	os.MkdirAll(pc, 0750)
-	os.MkdirAll(filepath.Join(pc, "layers"), 0750)
-	os.MkdirAll(filepath.Join(pc, "repo"), 0750)
-	os.MkdirAll(filepath.Join(pc, "build"), 0750)
+	_ = os.MkdirAll(pc, 0750)
+	_ = os.MkdirAll(filepath.Join(pc, "layers"), 0750)
+	_ = os.MkdirAll(filepath.Join(pc, "repo"), 0750)
+	_ = os.MkdirAll(filepath.Join(pc, "temp"), 0750)
 	return pc
 }
 

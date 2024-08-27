@@ -58,14 +58,15 @@ func (t *TreeProgress) Run(text string, wg *sync.WaitGroup, wait chan bool) {
 	}
 }
 
-func (t *TreeProgress) TrackFunction(text string, f func()) {
+func (t *TreeProgress) TrackFunction(text string, f func() error) error {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	c := make(chan bool)
 	go t.Run(text, &wg, c)
-	f()
+	err := f()
 	c <- true
 	wg.Wait()
+	return err
 }
 
 func (t *TreeProgress) genIndent() string {
