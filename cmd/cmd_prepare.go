@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/m41denx/particle-engine/pkg"
-	"github.com/m41denx/particle-engine/pkg/build"
 	"github.com/m41denx/particle-engine/pkg/manifest"
 	"path"
 )
@@ -56,7 +55,7 @@ func (cmd *CmdPrepare) Run() error {
 	if err != nil {
 		return err
 	}
-	ctx := build.NewBuildContext(manif, cmd.dir, pkg.Config)
+	ctx := builder.NewBuildContext(manif, cmd.dir, pkg.Config)
 	if err := ctx.FetchDependencies(); err != nil {
 		return err
 	}
