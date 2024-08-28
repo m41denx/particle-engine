@@ -234,6 +234,7 @@ func apiUploadLayer(c *fiber.Ctx) error {
 			Message: err.Error(),
 		})
 	}
+	defer ld.Close()
 
 	var particleLayer db.ParticleLayer
 	err = DB.Where(db.ParticleLayer{
@@ -248,6 +249,11 @@ func apiUploadLayer(c *fiber.Ctx) error {
 		})
 	}
 
+	shallow := false
+	if particleLayer.Size != 0 && particleLayer.Size == uint(layer.Size) {
+		shallow = true
+	}
+
 	particleLayer.Size = uint(layer.Size)
 
 	err = DB.Updates(particleLayer).Error
@@ -255,6 +261,10 @@ func apiUploadLayer(c *fiber.Ctx) error {
 		return c.Status(500).JSON(ErrorResponse{
 			Message: err.Error(),
 		})
+	}
+
+	if shallow {
+		return nil // Nothing to do
 	}
 
 	metrics.NewStep("Streaming to S3")
