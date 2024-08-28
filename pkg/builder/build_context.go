@@ -88,7 +88,7 @@ func (ctx *BuildContext) PrepareEnvironment() error {
 		if len(worker.manifest.Runnable.Build) > 0 && !ctx.touchedAppliances {
 			ctx.touchedAppliances = true
 			if err := prg.TrackFunction(
-				color.BlueString("Calculating integrity hashes..."), ctx.calculateIntegrityHash,
+				color.BlueString("Calculating integrity hashes..."), ctx.saveIntegrityHash,
 			); err != nil {
 				return err
 			}
@@ -115,7 +115,7 @@ func (ctx *BuildContext) PrepareEnvironment() error {
 	}
 	if len(ctx.integrityData) == 0 {
 		if err := prg.TrackFunction(
-			color.BlueString("Calculating integrity hashes..."), ctx.calculateIntegrityHash,
+			color.BlueString("Calculating integrity hashes..."), ctx.saveIntegrityHash,
 		); err != nil {
 			return err
 		}
@@ -223,7 +223,13 @@ func (ctx *BuildContext) calculateIntegrityHash() error {
 		}
 		ctx.integrityData[f] = h
 	}
+	return nil
+}
 
+func (ctx *BuildContext) saveIntegrityHash() error {
+	if err := ctx.calculateIntegrityHash(); err != nil {
+		return err
+	}
 	integr, err := json.MarshalIndent(ctx.integrityData, "", "\t")
 	if err != nil {
 		return err
