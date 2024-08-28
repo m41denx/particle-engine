@@ -30,7 +30,7 @@ func apiUser(c *fiber.Ctx) error {
 	var sz *uint
 	// SELECT sum(particle_layers.size) FROM particle_layers JOIN particles ON particle_layers.particle_id=particles.id WHERE particles.uid=1
 	if err := DB.Model(db.ParticleLayer{}).Joins("JOIN particles ON particle_layers.particle_id=particles.id").
-		Where(db.Particle{UID: user.ID}).Select("sum(particle_layers.size)").Scan(&sz).Error; err != nil {
+		Where("particles.uid=?", user.ID).Select("sum(particle_layers.size)").Scan(&sz).Error; err != nil {
 		log.Println(err)
 	}
 	if sz == nil {

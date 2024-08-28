@@ -54,13 +54,13 @@ func apiUploadManifest(c *fiber.Ctx) error {
 
 	if !preg.MatchString(name) {
 		return c.Status(400).JSON(ErrorResponse{
-			Message: "Invalid name (Required alphanumeric, _, -, .)",
+			Message: fmt.Sprintf("Invalid name: %s (Required alphanumeric, _, -, .)", name),
 		})
 	}
 
 	if !preg.MatchString(version) {
 		return c.Status(400).JSON(ErrorResponse{
-			Message: "Invalid version (Required alphanumeric, _, -, .)",
+			Message: fmt.Sprintf("Invalid version: %s (Required alphanumeric, _, -, .)", version),
 		})
 	}
 
@@ -73,7 +73,7 @@ func apiUploadManifest(c *fiber.Ctx) error {
 	}
 
 	manif.Meta["author"] = author
-	manif.Name = name + "@" + version
+	manif.Name = fmt.Sprintf("%s/%s@%s", author, name, version)
 
 	mb, err := json.Marshal(manif)
 	if err != nil {
@@ -120,8 +120,8 @@ func apiUploadManifest(c *fiber.Ctx) error {
 		particle.ID = oldParticle.ID
 		particle.IsPrivate = oldParticle.IsPrivate
 		particle.IsUnlisted = oldParticle.IsUnlisted
+		particle.Layers = oldParticle.Layers
 	}
-
 	for _, p := range particle.Layers {
 		if p.Version == version && p.Arch == arch {
 			// layer exists
@@ -133,6 +133,8 @@ func apiUploadManifest(c *fiber.Ctx) error {
 			}
 
 			ex = errors.New("layer exists")
+			layer.ID = p.ID
+			layer.Downloads = p.Downloads
 			p = layer
 		}
 	}
@@ -195,7 +197,7 @@ func apiUploadLayer(c *fiber.Ctx) error {
 	var sz *uint
 	// SELECT sum(particle_layers.size) FROM particle_layers JOIN particles ON particle_layers.particle_id=particles.id WHERE particles.uid=1
 	if err := DB.Model(db.ParticleLayer{}).Joins("JOIN particles ON particle_layers.particle_id=particles.id").
-		Where(db.Particle{UID: user.ID}).Select("sum(particle_layers.size)").Scan(&sz).Error; err != nil {
+		Where("particles.uid=?", user.ID).Select("sum(particle_layers.size)").Scan(&sz).Error; err != nil {
 		log.Println(err)
 	}
 
@@ -227,7 +229,7 @@ func apiUploadLayer(c *fiber.Ctx) error {
 		})
 	}
 
-	layerID := layer.Filename
+	layerID := strings.ReplaceAll(layer.Filename, ".7z", "")
 	ld, err := layer.Open()
 	if err != nil {
 		return c.Status(500).JSON(ErrorResponse{
@@ -242,7 +244,7 @@ func apiUploadLayer(c *fiber.Ctx) error {
 		Arch:       arch,
 		Version:    version,
 		LayerID:    layerID,
-	}).Find(&particleLayer).Error
+	}).First(&particleLayer).Error
 	if err != nil {
 		return c.Status(500).JSON(ErrorResponse{
 			Message: err.Error(),
@@ -254,9 +256,7 @@ func apiUploadLayer(c *fiber.Ctx) error {
 		shallow = true
 	}
 
-	particleLayer.Size = uint(layer.Size)
-
-	err = DB.Updates(particleLayer).Error
+	err = DB.Model(&particleLayer).Updates(db.ParticleLayer{Size: uint(layer.Size)}).Error
 	if err != nil {
 		return c.Status(500).JSON(ErrorResponse{
 			Message: err.Error(),
