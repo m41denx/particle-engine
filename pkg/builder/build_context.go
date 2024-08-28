@@ -295,3 +295,7 @@ func (ctx *BuildContext) hookAddLayer(layer *layer.Layer) {
 func (ctx *BuildContext) hookPushRecipe(rw *RecipeWorker) {
 	ctx.longrecipe = append(ctx.longrecipe, rw)
 }
+
+func (ctx *BuildContext) GetBuildDir() string {
+	return ctx.builddir
+}

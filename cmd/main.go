@@ -42,6 +42,7 @@ func main() {
 		NewCmdBuild(),
 		NewCmdEnter(),
 		NewCmdServe(),
+		NewCmdPublish(),
 		NewCmdVersion(),
 	}
 
