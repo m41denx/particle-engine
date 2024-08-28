@@ -95,7 +95,7 @@ func apiUploadManifest(c *fiber.Ctx) error {
 		Name:        name,
 		Author:      author,
 		UID:         user.ID,
-		Description: fmt.Sprintf("# %s/%s\n--\n", author, manif.Name),
+		Description: fmt.Sprintf("# %s\n--\n", manif.Name),
 		Layers:      make([]db.ParticleLayer, 0),
 		IsPrivate:   c.QueryBool("private"),
 		IsUnlisted:  c.QueryBool("unlisted"),
@@ -113,15 +113,13 @@ func apiUploadManifest(c *fiber.Ctx) error {
 		Name:   particle.Name,
 		UID:    particle.UID,
 		Author: author,
-	}).Preload("Layers").Select("id").Find(&oldParticle).Error
+	}).Preload("Layers").Select("id").First(&oldParticle).Error
 
 	if ex == nil {
 		// particle exists
-		particle.ID = oldParticle.ID
-		particle.IsPrivate = oldParticle.IsPrivate
-		particle.IsUnlisted = oldParticle.IsUnlisted
-		particle.Layers = oldParticle.Layers
+		particle = oldParticle
 	}
+	ex = nil
 	for _, p := range particle.Layers {
 		if p.Version == version && p.Arch == arch {
 			// layer exists
@@ -186,7 +184,7 @@ func apiUploadLayer(c *fiber.Ctx) error {
 	}()
 
 	var particle db.Particle
-	if err := DB.Model(db.Particle{}).Where(db.Particle{UID: user.ID, Name: name}).Find(&particle).Error; err != nil {
+	if err := DB.Model(db.Particle{}).Where(db.Particle{UID: user.ID, Name: name}).First(&particle).Error; err != nil {
 		return c.Status(401).JSON(ErrorResponse{
 			Message: "Particle doesn't exist",
 		})
@@ -195,9 +193,9 @@ func apiUploadLayer(c *fiber.Ctx) error {
 	metrics.NewStep("Counting layers sizes")
 
 	var sz *uint
-	// SELECT sum(particle_layers.size) FROM particle_layers JOIN particles ON particle_layers.particle_id=particles.id WHERE particles.uid=1
-	if err := DB.Model(db.ParticleLayer{}).Joins("JOIN particles ON particle_layers.particle_id=particles.id").
-		Where("particles.uid=?", user.ID).Select("sum(particle_layers.size)").Scan(&sz).Error; err != nil {
+	// SELECT sum(particle_layers.size) FROM particle_layers JOIN particle_repo ON particle_layers.particle_id=particle_repo.id WHERE particle_repo.uid=1
+	if err := DB.Model(db.ParticleLayer{}).Joins("JOIN particle_repo ON particle_layers.particle_id=particle_repo.id").
+		Where("particle_repo.uid=?", user.ID).Select("sum(particle_layers.size)").Scan(&sz).Error; err != nil {
 		log.Println(err)
 	}
 

@@ -12,8 +12,12 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	logger2 "gorm.io/gorm/logger"
+	"log"
+	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func StartServer(host string, port uint) error {
@@ -57,7 +61,18 @@ func StartServer(host string, port uint) error {
 func InitDB(dbtype string, dsn string) (err error) {
 	switch dbtype {
 	case "mysql":
-		DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+		DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+			Logger: logger2.New(
+				log.New(os.Stdout, "\r\n", log.LstdFlags),
+				logger2.Config{
+					SlowThreshold:             time.Second,  // Slow SQL threshold
+					LogLevel:                  logger2.Info, // Log level
+					ParameterizedQueries:      false,
+					IgnoreRecordNotFoundError: false,
+					Colorful:                  true,
+				},
+			),
+		})
 	case "local":
 		DB, err = gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	default:

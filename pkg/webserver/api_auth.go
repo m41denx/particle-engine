@@ -13,7 +13,7 @@ func auth(c *fiber.Ctx) (user db.User, err error) {
 		return user, nil
 	}
 	// You're either anonymous or logged in, no invalid users
-	err = DB.Where(db.User{Username: uname, Token: passwd}).Find(&user).Error
+	err = DB.Where(db.User{Username: uname, Token: passwd}).First(&user).Error
 	if err != nil {
 		return user, err
 	}
@@ -28,9 +28,9 @@ func apiUser(c *fiber.Ctx) error {
 		})
 	}
 	var sz *uint
-	// SELECT sum(particle_layers.size) FROM particle_layers JOIN particles ON particle_layers.particle_id=particles.id WHERE particles.uid=1
-	if err := DB.Model(db.ParticleLayer{}).Joins("JOIN particles ON particle_layers.particle_id=particles.id").
-		Where("particles.uid=?", user.ID).Select("sum(particle_layers.size)").Scan(&sz).Error; err != nil {
+	// SELECT sum(particle_layers.size) FROM particle_layers JOIN particle_repo ON particle_layers.particle_id=particle_repo.id WHERE particle_repo.uid=1
+	if err := DB.Model(db.ParticleLayer{}).Joins("JOIN particle_repo ON particle_layers.particle_id=particle_repo.id").
+		Where("particle_repo.uid=?", user.ID).Select("sum(particle_layers.size)").Scan(&sz).Error; err != nil {
 		log.Println(err)
 	}
 	if sz == nil {

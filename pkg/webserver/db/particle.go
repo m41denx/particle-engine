@@ -12,3 +12,7 @@ type Particle struct {
 	IsPrivate   bool `gorm:"default:0"`
 	IsUnlisted  bool `gorm:"default:0"`
 }
+
+func (p *Particle) TableName() string {
+	return "particle_repo"
+}
