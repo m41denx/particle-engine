@@ -3,6 +3,7 @@ package webserver
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/m41denx/particle-engine/pkg/webserver/db"
+	"log"
 )
 
 func auth(c *fiber.Ctx) (user db.User, err error) {
@@ -27,11 +28,10 @@ func apiUser(c *fiber.Ctx) error {
 		})
 	}
 	var sz *uint
-	err = DB.Model(db.Particle{}).Where(db.Particle{UID: user.ID}).Select("sum(size)").Scan(&sz).Error
-	if err != nil {
-		return c.Status(500).JSON(ErrorResponse{
-			Message: err.Error(),
-		})
+	// SELECT sum(particle_layers.size) FROM particle_layers JOIN particles ON particle_layers.particle_id=particles.id WHERE particles.uid=1
+	if err := DB.Model(db.ParticleLayer{}).Joins("JOIN particles ON particle_layers.particle_id=particles.id").
+		Where(db.Particle{UID: user.ID}).Select("sum(particle_layers.size)").Scan(&sz).Error; err != nil {
+		log.Println(err)
 	}
 	if sz == nil {
 		sz = new(uint)

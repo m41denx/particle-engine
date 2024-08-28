@@ -45,7 +45,7 @@ func StartServer(host string, port uint) error {
 	})
 	app.Get("/repo/:author/:name\\@:version/:arch", apiFetchManifest)
 	app.Get("/repo/:author/:name/:arch", apiFetchManifest)
-	app.Post("/upload/:name\\@:version/:arch", apiUpload)
+	app.Post("/upload/:author/:name\\@:version/:arch", apiUpload)
 
 	app.Get("/layers/:layerid", apiPullLayer)
 	app.Get("/user", apiUser)

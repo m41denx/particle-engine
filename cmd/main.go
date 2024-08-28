@@ -11,7 +11,7 @@ import (
 	"runtime/debug"
 )
 
-const Version = "0.9.0-dev"
+const Version = "0.9.3-dev"
 
 var BuildTag string
 var BuildDate string
@@ -43,6 +43,7 @@ func main() {
 		NewCmdEnter(),
 		NewCmdServe(),
 		NewCmdPublish(),
+		NewCmdAuth(),
 		NewCmdVersion(),
 	}
 
