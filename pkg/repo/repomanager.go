@@ -129,6 +129,10 @@ func (r *RepoManager) Publish(ctx *builder.BuildContext) error {
 	if len(r.name) == 0 {
 		r.name = strings.SplitN(manif.Name, "@", 2)[0]
 	}
+	if !strings.Contains(r.name, "/") {
+		uname, _ := pkg.Config.GetCredsForRepo(r.url)
+		r.name = fmt.Sprintf("%s/%s", uname, r.name)
+	}
 	if len(r.version) == 0 {
 		ver := strings.SplitN(manif.Name, "@", 2)
 		if len(ver) == 2 {
@@ -151,7 +155,7 @@ func (r *RepoManager) Publish(ctx *builder.BuildContext) error {
 
 	{
 		// Check particle existence
-		_, err := os.Stat(path.Join(ctx.GetBuildDir(), "layers", manif.Layer.Block))
+		_, err := os.Stat(path.Join(ctx.GetHomeDir(), "layers", manif.Layer.Block+".7z"))
 		if err != nil {
 			fmt.Println(color.RedString("\nError reading layer for "+r.meta.Name+": "), "\nPlease run particle build first")
 			return err
@@ -198,7 +202,7 @@ func (r *RepoManager) Publish(ctx *builder.BuildContext) error {
 			return err
 		}
 		req, err := newfileUploadRequest(
-			uploadURL, nil, "layer", path.Join(ctx.GetBuildDir(), "layers", manif.Layer.Block),
+			uploadURL, nil, "layer", path.Join(ctx.GetHomeDir(), "layers", manif.Layer.Block+".7z"),
 		)
 		if err != nil {
 			return err

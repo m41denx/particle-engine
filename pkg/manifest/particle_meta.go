@@ -24,7 +24,7 @@ func ParseParticleURL(url string) (ParticleMeta, error) {
 			Tag:      "",
 		}, nil
 	}
-	re := regexp.MustCompile("^(?P<server>http(s)?://[a-zA-Z0-9_./-]+/)?(?P<user>[a-z0-9-]+)/(?P<name>[a-z0-9-_.]+)(?P<tag>@[a-z0-9.-]+)?$")
+	re := regexp.MustCompile("^(?P<server>http(s)?://[a-zA-Z0-9_./-]+:?[0-9]{0,5}/)?(?P<user>[a-z0-9-]+)/(?P<name>[a-z0-9-_.]+)(?P<tag>@[a-z0-9.-]+)?$")
 
 	matches := re.FindStringSubmatch(url)
 

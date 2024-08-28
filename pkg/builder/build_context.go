@@ -37,8 +37,9 @@ type BuildContext struct {
 func NewBuildContext(manifest manifest.Manifest, ldir string, config *structs.Config) *BuildContext {
 	home, _ := os.UserCacheDir()
 	pc := filepath.Join(home, "particle_cache")
-	manifest.Layer.Block = "[sha256 autogen]"
-	bdir := path.Join(pc, "temp", utils.CalcHash([]byte(manifest.ToYaml())))
+	manifestForHash := manifest
+	manifestForHash.Layer.Block = "[sha256 autogen]"
+	bdir := path.Join(pc, "temp", utils.CalcHash([]byte(manifestForHash.ToYaml())))
 	_ = os.MkdirAll(bdir, 0750)
 	return &BuildContext{
 		Manifest:          manifest,
@@ -296,6 +297,6 @@ func (ctx *BuildContext) hookPushRecipe(rw *RecipeWorker) {
 	ctx.longrecipe = append(ctx.longrecipe, rw)
 }
 
-func (ctx *BuildContext) GetBuildDir() string {
-	return ctx.builddir
+func (ctx *BuildContext) GetHomeDir() string {
+	return ctx.homedir
 }
