@@ -55,6 +55,10 @@ func NewBuildContext(manifest manifest.Manifest, ldir string, config *structs.Co
 	}
 }
 
+func (ctx *BuildContext) Clean() error {
+	return os.RemoveAll(ctx.builddir)
+}
+
 func (ctx *BuildContext) FetchDependencies() error {
 	headWorker := NewRecipeWorker(ctx, nil, ctx.Manifest)
 	prg := utils.NewTreeProgress()
@@ -143,9 +147,12 @@ func (ctx *BuildContext) DownloadLayers() error {
 func (ctx *BuildContext) Build() error {
 	fmt.Println(color.CyanString("Building particle %s...", ctx.Manifest.Name))
 	prg := utils.NewTreeProgress()
-	if err := prg.TrackFunction(color.BlueString("Verifying contents..."), ctx.buildDiff); err != nil {
+	fmt.Println(color.BlueString("Verifying contents..."))
+	prg.Tab()
+	if err := ctx.buildDiff(); err != nil {
 		return err
 	}
+	prg.Ret()
 	if err := prg.TrackFunction(color.BlueString("Building layer..."), ctx.makeLayer); err != nil {
 		return err
 	}
