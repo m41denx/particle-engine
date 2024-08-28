@@ -7,8 +7,9 @@ import (
 	"strings"
 )
 
-// const DefaultRepo = "http://particles.fruitspace.one/repo/"
-const DefaultRepo = "http://127.0.0.1:8000/"
+const DefaultRepo = "http://hub.fruitspace.one/"
+
+//const DefaultRepo = "http://127.0.0.1:8000/"
 
 type Manifest struct {
 	Name     string              `yaml:"name" json:"name"`
@@ -51,7 +52,7 @@ func (m *RecipeLayerStanza) GetParticle() string {
 type RunnableStanza struct {
 	Runner  string                `yaml:"runner,omitempty" json:"runner,omitempty"`
 	Require []RecipeLayerStanza   `yaml:"require,omitempty" json:"require,omitempty"`
-	Build   []RunnableBuildStanza `yaml:"build" json:"build"`
+	Build   []RunnableBuildStanza `yaml:"build,omitempty" json:"build,omitempty"`
 	Expose  MetaStanza            `yaml:"expose,omitempty" json:"expose,omitempty"`
 }
 

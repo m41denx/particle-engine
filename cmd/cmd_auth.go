@@ -44,7 +44,7 @@ Usage: ` + color.CyanString(binName+" auth <url> [args]") + `
 
 	Authentication example: ` + binName + ` auth -a user -t token
 
-	User info example: ` + binName + ` auth -u https://particles.fruitspace.one
+	User info example: ` + binName + ` auth -u https://hub.fruitspace.one
 
 	Please see the individual subcommand help for detailed usage information.
 `

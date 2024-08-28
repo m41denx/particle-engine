@@ -12,8 +12,9 @@ import (
 	"time"
 )
 
-// const DefaultLayerRepo = "http://particles.fruitspace.one/layers/"
-const DefaultLayerRepo = "http://localhost:8000/layers/"
+const DefaultLayerRepo = "http://hub.fruitspace.one/layers/"
+
+//const DefaultLayerRepo = "http://localhost:8000/layers/"
 
 type Layer struct {
 	Hash      string

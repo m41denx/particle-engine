@@ -22,7 +22,7 @@ func NewCmdServe() *CmdServe {
 	cmd.fs.StringVar(&cmd.fs3Region, "fs3-region", "us-east-1", "S3 region")
 	cmd.fs.StringVar(&cmd.fs3Bucket, "fs3-bucket", "particles", "S3 bucket")
 	cmd.fs.StringVar(&cmd.fs3Endpoint, "fs3-endpoint", "https://s3.amazonaws.com", "S3 endpoint")
-	cmd.fs.StringVar(&cmd.fs3Domain, "fs3-domain", "https://particles.fruitspace.one", "S3 layers domain")
+	cmd.fs.StringVar(&cmd.fs3Domain, "fs3-domain", "https://hub.fruitspace.one", "S3 layers domain")
 	cmd.fs.StringVar(&cmd.fs3Prefix, "fs3-prefix", "/layers", "S3 prefix")
 
 	return cmd
@@ -59,7 +59,7 @@ Usage: ` + color.CyanString(binName+" serve [args]") + `
   Example for scalable production deployment:
 	` + binName + ` serve -p 3000 -h 0.0.0.0 -dbm mysql -dbaddr "user:password@tcp(127.0.0.1:3306)/particles" \
 		-fsm s3 -fs3-key s3key -fs3-secret s3secret -fs3-region us-east-1 -fs3-bucket particles \
-        -fs3-endpoint https://s3.amazonaws.com -fs3-domain https://particles.fruitspace.one
+        -fs3-endpoint https://s3.amazonaws.com -fs3-domain https://hub.fruitspace.one
 
   Please see the individual subcommand help for detailed usage information.
 `
