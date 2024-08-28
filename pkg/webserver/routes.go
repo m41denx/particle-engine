@@ -74,6 +74,10 @@ func InitDB(dbtype string, dsn string) (err error) {
 	if err != nil {
 		return
 	}
+	err = DB.AutoMigrate(&db.ParticleLayer{})
+	if err != nil {
+		return
+	}
 	fmt.Println(color.CyanString("Using Database: %s", strings.ToTitle(dbtype)))
 	return
 }

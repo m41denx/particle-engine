@@ -8,17 +8,17 @@ import (
 )
 
 // const DefaultRepo = "http://particles.fruitspace.one/repo/"
-const DefaultRepo = "http://127.0.0.1:8000/repo/"
+const DefaultRepo = "http://127.0.0.1:8000/"
 
 type Manifest struct {
 	Name     string              `yaml:"name" json:"name"`
-	Meta     Meta                `yaml:"meta,omitempty" json:"meta,omitempty"`
+	Meta     MetaStanza          `yaml:"meta,omitempty" json:"meta,omitempty"`
 	Layer    LayerStanza         `yaml:"layer" json:"layer"`
 	Recipe   []RecipeLayerStanza `yaml:"recipe" json:"recipe"`
 	Runnable RunnableStanza      `yaml:"runnable,omitempty" json:"runnable,omitempty"`
 }
 
-type Meta map[string]string
+type MetaStanza map[string]string
 
 type LayerStanza struct {
 	Block  string `yaml:"block" json:"block"`
@@ -28,10 +28,10 @@ type LayerStanza struct {
 // region RecipeLayerStanza
 
 type RecipeLayerStanza struct {
-	UseParticle   string `yaml:"use,omitempty" json:"use,omitempty"`
-	ApplyParticle string `yaml:"apply,omitempty" json:"apply,omitempty"`
-	Env           Meta   `yaml:"env,omitempty" json:"env,omitempty"`
-	Command       string `yaml:"command,omitempty" json:"command,omitempty"`
+	UseParticle   string     `yaml:"use,omitempty" json:"use,omitempty"`
+	ApplyParticle string     `yaml:"apply,omitempty" json:"apply,omitempty"`
+	Env           MetaStanza `yaml:"env,omitempty" json:"env,omitempty"`
+	Command       string     `yaml:"command,omitempty" json:"command,omitempty"`
 }
 
 func (m *RecipeLayerStanza) GetParticle() string {
@@ -52,7 +52,7 @@ type RunnableStanza struct {
 	Runner  string                `yaml:"runner,omitempty" json:"runner,omitempty"`
 	Require []RecipeLayerStanza   `yaml:"require,omitempty" json:"require,omitempty"`
 	Build   []RunnableBuildStanza `yaml:"build" json:"build"`
-	Expose  Meta                  `yaml:"expose,omitempty" json:"expose,omitempty"`
+	Expose  MetaStanza            `yaml:"expose,omitempty" json:"expose,omitempty"`
 }
 
 type RunnableBuildStanza struct {
@@ -96,7 +96,7 @@ func (m *Manifest) ToJson() string {
 func NewManifest(name string) Manifest {
 	return Manifest{
 		Name: name,
-		Meta: Meta{
+		Meta: MetaStanza{
 			"author": "username",
 			"note":   "Short note",
 		},

@@ -27,7 +27,7 @@ func apiUpload(c *fiber.Ctx) error {
 
 func apiUploadManifest(c *fiber.Ctx) error {
 	user, err := auth(c)
-	if user.ID == 0 || err != nil {
+	if err != nil || user.ID == 0 {
 		return c.Status(403).JSON(ErrorResponse{
 			Message: "Invalid credentials",
 		})
