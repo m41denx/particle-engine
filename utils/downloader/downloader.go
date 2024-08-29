@@ -3,6 +3,7 @@ package downloader
 import (
 	"github.com/cheggaaa/pb/v3"
 	"golang.org/x/term"
+	"math"
 	"os"
 	"runtime"
 	"sync"
@@ -52,9 +53,10 @@ func (d *Downloader) AddJob(job *Job) {
 func (d *Downloader) Do() []error {
 	var errs []error
 
-	for i := 0; i < len(d.jobs); i += d.threads {
+	step := int(math.Min(float64(d.threads), float64(len(d.jobs))))
+	for i := 0; i < len(d.jobs); i += step {
 		wg := new(sync.WaitGroup)
-		wg.Add(d.threads)
+		wg.Add(step)
 		go func() {
 			if err := d.jobs[i].Do(wg); err != nil {
 				errs = append(errs, err)

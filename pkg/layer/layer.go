@@ -65,7 +65,7 @@ func (l *Layer) Download(dlmgr *downloader.Downloader) error {
 	httpClient := GetLayerFetcher()
 	job := downloader.NewJob(l.server+l.Hash, "GET", l.filename)
 	job.SetHttpClient(httpClient)
-	job.WithLabel(color.GreenString("→ %s", l.Hash))
+	job.WithLabel(color.GreenString("→ %s", l.Hash[:12]))
 	dlmgr.AddJob(job)
 	return nil
 }
