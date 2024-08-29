@@ -40,7 +40,7 @@ func NewRecipeWorkerFromURL(ctx *BuildContext, parent *RecipeWorker, meta manife
 		}), nil
 	}
 
-	manifestURL := fmt.Sprintf("%s/repo/%s/%s.yaml", meta.Server, meta.Fullname, utils.GetArchString())
+	manifestURL := fmt.Sprintf("%srepo/%s/%s", meta.Server, meta.Fullname, utils.GetArchString())
 	req, err := http.NewRequest("GET", manifestURL, nil)
 	if err != nil {
 		return nil, err

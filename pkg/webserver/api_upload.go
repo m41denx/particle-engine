@@ -119,7 +119,7 @@ func apiUploadManifest(c *fiber.Ctx) error {
 		// particle exists
 		particle = oldParticle
 	}
-	ex = nil
+	var errl error
 	for _, p := range particle.Layers {
 		if p.Version == version && p.Arch == arch {
 			// layer exists
@@ -129,20 +129,24 @@ func apiUploadManifest(c *fiber.Ctx) error {
 					log.Println(err)
 				}
 			}
-
-			ex = errors.New("layer exists")
+			errl = errors.New("layer exists")
 			layer.ID = p.ID
 			layer.Downloads = p.Downloads
 			p = layer
+			break
 		}
 	}
 
-	if ex == nil {
+	if errl == nil {
 		// No such layer exists
 		particle.Layers = append(particle.Layers, layer)
 	}
 
-	err = DB.Save(&particle).Error
+	if ex == nil {
+		err = DB.Updates(&particle).Error
+	} else {
+		err = DB.Create(&particle).Error
+	}
 	if err != nil {
 		return c.Status(500).JSON(ErrorResponse{
 			Message: err.Error(),

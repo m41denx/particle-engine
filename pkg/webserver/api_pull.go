@@ -22,7 +22,7 @@ func apiFetchManifest(c *fiber.Ctx) (err error) {
 
 	var particle db.Particle
 
-	err = DB.Where(db.Particle{
+	err = DB.Model(db.Particle{}).Where(db.Particle{
 		Name:   c.Params("name"),
 		Author: c.Params("author"),
 	}).First(&particle).Error
@@ -37,17 +37,17 @@ func apiFetchManifest(c *fiber.Ctx) (err error) {
 
 	if ver == "latest" || ver == "" {
 		// Fetch latest matching
-		err = DB.Where(db.ParticleLayer{
+		err = DB.Model(db.ParticleLayer{}).Where(db.ParticleLayer{
 			ParticleID: particle.ID,
 			Arch:       c.Params("arch"),
 		}).Order("updated_at DESC").First(&layer).Error
 	} else {
 		// Strict verison
-		err = DB.Where(db.ParticleLayer{
+		err = DB.Model(db.ParticleLayer{}).Where(db.ParticleLayer{
 			ParticleID: particle.ID,
 			Version:    ver,
 			Arch:       c.Params("arch"),
-		}).Order("updated_at DESC").First(&particle).Error
+		}).Order("updated_at DESC").First(&layer).Error
 	}
 	if err != nil {
 		return c.Status(404).JSON(ErrorResponse{
