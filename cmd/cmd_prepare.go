@@ -7,19 +7,25 @@ import (
 	"github.com/m41denx/particle-engine/pkg"
 	"github.com/m41denx/particle-engine/pkg/builder"
 	"github.com/m41denx/particle-engine/pkg/manifest"
+	"github.com/m41denx/particle-engine/utils"
+	"os"
 	"path"
+	"strings"
 )
 
 func NewCmdPrepare() *CmdPrepare {
 	cmd := &CmdPrepare{
 		fs: flag.NewFlagSet("prepare", flag.ExitOnError),
 	}
+	cmd.fs.StringVar(&cmd.arch, "a", "", fmt.Sprintf("Override architecture. Supported: %s",
+		strings.Join(utils.SUPPORTED_ARCH, ", ")))
 	return cmd
 }
 
 type CmdPrepare struct {
-	dir string
-	fs  *flag.FlagSet
+	dir  string
+	arch string
+	fs   *flag.FlagSet
 }
 
 func (cmd *CmdPrepare) Name() string {
@@ -47,6 +53,9 @@ func (cmd *CmdPrepare) Init(args []string) (err error) {
 		cmd.dir = cmd.fs.Arg(0)
 	} else {
 		return fmt.Errorf("path is required")
+	}
+	if len(cmd.arch) > 0 {
+		return os.Setenv("PARTICLE_ARCH", cmd.arch)
 	}
 	return
 }

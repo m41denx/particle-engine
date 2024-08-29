@@ -78,6 +78,10 @@ func GetArchString() string {
 	default:
 		return "unsupported"
 	}
+
+	if archOverride, ok := os.LookupEnv("PARTICLE_ARCH"); ok {
+		arch = strings.ToLower(archOverride)
+	}
 	return arch
 }
 
