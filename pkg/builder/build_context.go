@@ -106,6 +106,9 @@ func (ctx *BuildContext) PrepareEnvironment() error {
 			continue
 		}
 		// FIXME: WHERE THE FUCK ARE OVERRIDES AND HOW ARE WE GONNA SHOVE THEM INTO THE ENVIRONMENT
+		if len(worker.manifest.Runnable.Build) == 0 {
+			continue
+		}
 		err = prg.TrackFunction(color.BlueString("Running %s...", worker.manifest.Name), func() error {
 			return worker.RunAppliance(ctx.builddir, manifest.RecipeLayerStanza{})
 		})
@@ -207,6 +210,7 @@ func (ctx *BuildContext) fetchRunner() error {
 	if worker.manifest.Name != "blank" {
 		l := layer.NewLayer(worker.manifest.Layer.Block, ctx.homedir, worker.manifest.Layer.Server)
 		ctx.hookAddLayer(l)
+		worker.layer = l
 	}
 	ctx.longrecipe = slices.Concat([]*RecipeWorker{worker}, ctx.longrecipe)
 	return nil

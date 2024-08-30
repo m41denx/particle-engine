@@ -57,11 +57,13 @@ func (d *Downloader) Do() []error {
 	for i := 0; i < len(d.jobs); i += step {
 		wg := new(sync.WaitGroup)
 		wg.Add(step)
-		go func() {
-			if err := d.jobs[i].Do(wg); err != nil {
-				errs = append(errs, err)
-			}
-		}()
+		for j := i; j < i+step && j < len(d.jobs); j++ {
+			go func() {
+				if err := d.jobs[j].Do(wg); err != nil {
+					errs = append(errs, err)
+				}
+			}()
+		}
 		if d.showBar {
 			err := d.pool.Start()
 			if err != nil {
