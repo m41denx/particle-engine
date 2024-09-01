@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
-	"path"
+	"path/filepath"
 	"slices"
 )
 
@@ -35,7 +35,7 @@ func (r *BusyboxRunner) SetStdPipe(writer io.Writer) {
 
 func (r *BusyboxRunner) CreateEnvironment() error {
 	j := func(dir ...string) string {
-		return path.Join(slices.Concat([]string{r.workdir}, dir)...)
+		return filepath.Join(slices.Concat([]string{r.workdir}, dir)...)
 	}
 	u, _ := user.Current()
 	folders := []string{
@@ -67,7 +67,7 @@ func (r *BusyboxRunner) Run(shellCommand string, env map[string]string) error {
 	for k, v := range env {
 		environ = append(environ, k+"="+v)
 	}
-	cmd := exec.Command(path.Join(r.workdir, "usr", "bin", "busybox.exe"), "bash", "-c", shellCommand)
+	cmd := exec.Command(filepath.Join(r.workdir, "usr", "bin", "busybox.exe"), "bash", "-c", shellCommand)
 	cmd.Env = environ
 	cmd.Dir = r.workdir
 	cmd.Stdout = r.stdout

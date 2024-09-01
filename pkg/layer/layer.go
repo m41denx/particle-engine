@@ -6,7 +6,6 @@ import (
 	"github.com/m41denx/particle-engine/utils"
 	"github.com/m41denx/particle-engine/utils/downloader"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -37,13 +36,13 @@ func NewLayer(hash string, homedir string, server string) *Layer {
 		Files:     []string{},
 		Deletions: []string{},
 		homedir:   homedir,
-		filename:  path.Join(homedir, "layers", hash+".7z"),
+		filename:  filepath.Join(homedir, "layers", hash+".7z"),
 		server:    server,
 	}
 }
 
 func CreateLayerFrom(dir string, blankLayer *Layer) (*Layer, error) {
-	tempFile := path.Join(os.TempDir(), "_pbuild_"+time.Now().Format("20060102150405")+".7z")
+	tempFile := filepath.Join(os.TempDir(), "_pbuild_"+time.Now().Format("20060102150405")+".7z")
 	defer os.Remove(tempFile)
 	err := pkg.UnzipProvider.OpenZip(tempFile).WorkDir(dir).AddDirectory("").Compress()
 	if err != nil {

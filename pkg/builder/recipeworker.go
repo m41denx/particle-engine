@@ -12,6 +12,7 @@ import (
 	"maps"
 	"net/http"
 	"path"
+	"path/filepath"
 	"slices"
 )
 
@@ -121,10 +122,10 @@ func (rw *RecipeWorker) ExtractLayer(destdir string, isRootfs bool) error {
 	}
 	if len(rw.manifest.Runnable.Build) > 0 {
 		// When pulling from origin, Manifest.Name is replaced by full particle name with full_url
-		return rw.layer.ExtractTo(path.Join(destdir, "runnable", rw.manifest.Name)) //FIXME
+		return rw.layer.ExtractTo(filepath.Join(destdir, "runnable", rw.manifest.Name)) //FIXME
 		// TODO: Allow appliances to expose their commands
 	} else {
-		return rw.layer.ExtractTo(path.Join(destdir, "build"))
+		return rw.layer.ExtractTo(filepath.Join(destdir, "build"))
 	}
 }
 

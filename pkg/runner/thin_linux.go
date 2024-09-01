@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
-	"path"
+	"path/filepath"
 	"slices"
 )
 
@@ -35,7 +35,7 @@ func (r *BusyboxRunner) SetStdPipe(writer io.Writer) {
 
 func (r *BusyboxRunner) CreateEnvironment() error {
 	j := func(dir ...string) string {
-		return path.Join(slices.Concat([]string{r.workdir}, dir)...)
+		return filepath.Join(slices.Concat([]string{r.workdir}, dir)...)
 	}
 	u, _ := user.Current()
 	folders := []string{

@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -43,7 +42,7 @@ func LDir(srcDir string, prefix string) []string {
 	}
 	var dlist []string
 	for _, file := range files {
-		pr := path.Join(srcDir, file.Name())
+		pr := filepath.Join(srcDir, file.Name())
 		if file.IsDir() {
 			flist := LDir(pr, prefix+file.Name()+"/")
 			dlist = append(dlist, flist...)

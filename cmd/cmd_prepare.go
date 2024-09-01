@@ -9,7 +9,7 @@ import (
 	"github.com/m41denx/particle-engine/pkg/manifest"
 	"github.com/m41denx/particle-engine/utils"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -61,7 +61,7 @@ func (cmd *CmdPrepare) Init(args []string) (err error) {
 }
 
 func (cmd *CmdPrepare) Run() error {
-	manif, err := manifest.NewManifestFromFile(path.Join(cmd.dir, "particle.yaml"))
+	manif, err := manifest.NewManifestFromFile(filepath.Join(cmd.dir, "particle.yaml"))
 	if err != nil {
 		return err
 	}

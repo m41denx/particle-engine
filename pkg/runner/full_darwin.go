@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 )
 
 type MsysRunner struct {
@@ -44,7 +44,7 @@ func (r *MsysRunner) Run(shellCommand string, env map[string]string) error {
 	for k, v := range env {
 		environ = append(environ, k+"="+v)
 	}
-	cmd := exec.Command(path.Join(r.workdir, "usr", "bin", "bash.exe"), "-lc", shellCommand)
+	cmd := exec.Command(filepath.Join(r.workdir, "usr", "bin", "bash.exe"), "-lc", shellCommand)
 	cmd.Dir = r.workdir
 	cmd.Env = environ
 	cmd.Stdout = r.stdout

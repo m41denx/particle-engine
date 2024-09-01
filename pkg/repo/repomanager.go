@@ -13,7 +13,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 )
@@ -155,7 +154,7 @@ func (r *RepoManager) Publish(ctx *builder.BuildContext) error {
 
 	{
 		// Check particle existence
-		_, err := os.Stat(path.Join(ctx.GetHomeDir(), "layers", manif.Layer.Block+".7z"))
+		_, err := os.Stat(filepath.Join(ctx.GetHomeDir(), "layers", manif.Layer.Block+".7z"))
 		if err != nil {
 			fmt.Println(color.RedString("\nError reading layer for "+r.meta.Name+": "), "\nPlease run particle build first")
 			return err
@@ -202,7 +201,7 @@ func (r *RepoManager) Publish(ctx *builder.BuildContext) error {
 			return err
 		}
 		req, err := newfileUploadRequest(
-			uploadURL, nil, "layer", path.Join(ctx.GetHomeDir(), "layers", manif.Layer.Block+".7z"),
+			uploadURL, nil, "layer", filepath.Join(ctx.GetHomeDir(), "layers", manif.Layer.Block+".7z"),
 		)
 		if err != nil {
 			return err

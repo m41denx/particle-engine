@@ -3,7 +3,6 @@ package utils
 import (
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 )
 
@@ -15,7 +14,7 @@ type SevenZip struct {
 }
 
 func New7Zip() *SevenZip {
-	p := path.Join(os.TempDir(), SevenZipName)
+	p := filepath.Join(os.TempDir(), SevenZipName)
 	if err := os.WriteFile(p, SevenZipExecutable, 0777); err != nil {
 		panic(err)
 	}

@@ -7,7 +7,7 @@ import (
 	"github.com/m41denx/particle-engine/pkg"
 	"github.com/m41denx/particle-engine/pkg/builder"
 	"github.com/m41denx/particle-engine/pkg/manifest"
-	"path"
+	"path/filepath"
 )
 
 func NewCmdBuild() *CmdBuild {
@@ -53,7 +53,7 @@ func (cmd *CmdBuild) Init(args []string) (err error) {
 }
 
 func (cmd *CmdBuild) Run() error {
-	manif, err := manifest.NewManifestFromFile(path.Join(cmd.dir, "particle.yaml"))
+	manif, err := manifest.NewManifestFromFile(filepath.Join(cmd.dir, "particle.yaml"))
 	if err != nil {
 		return err
 	}
