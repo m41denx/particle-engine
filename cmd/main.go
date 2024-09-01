@@ -39,6 +39,7 @@ func main() {
 	subcommands := []Command{
 		NewCmdInit(),
 		NewCmdPrepare(),
+		NewCmdClean(),
 		NewCmdBuild(),
 		NewCmdEnter(),
 		NewCmdServe(),

@@ -14,7 +14,6 @@ import (
 	"github.com/m41denx/particle-engine/utils/downloader"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -39,7 +38,7 @@ func NewBuildContext(manifest manifest.Manifest, ldir string, config *structs.Co
 	pc := filepath.Join(home, "particle_cache")
 	manifestForHash := manifest
 	manifestForHash.Layer.Block = "[sha256 autogen]"
-	bdir := path.Join(pc, "temp", utils.CalcHash([]byte(manifestForHash.ToYaml())))
+	bdir := filepath.Join(pc, "temp", utils.CalcHash([]byte(manifestForHash.ToYaml())))
 	_ = os.MkdirAll(bdir, 0750)
 	return &BuildContext{
 		Manifest:          manifest,
@@ -55,8 +54,27 @@ func NewBuildContext(manifest manifest.Manifest, ldir string, config *structs.Co
 	}
 }
 
-func (ctx *BuildContext) Clean() error {
-	return os.RemoveAll(ctx.builddir)
+func (ctx *BuildContext) Clean(all bool) error {
+	if all {
+		files, err := os.ReadDir(filepath.Clean(filepath.Join(ctx.homedir, "temp")))
+		if err != nil {
+			return err
+		}
+		for _, file := range files {
+			if !file.IsDir() {
+				continue
+			}
+			if err := ctx.cleanCache(file.Name()); err != nil {
+				return err
+			}
+		}
+	}
+	return ctx.cleanCache(filepath.Base(ctx.builddir))
+}
+
+func (ctx *BuildContext) cleanCache(id string) error {
+	fmt.Println(color.CyanString("Cleaning cache for Manifest %s...", id[:12]))
+	return os.RemoveAll(filepath.Join(filepath.Dir(ctx.builddir), id))
 }
 
 func (ctx *BuildContext) FetchDependencies() error {
@@ -68,7 +86,7 @@ func (ctx *BuildContext) FetchDependencies() error {
 	}
 	fmt.Println(color.BlueString(
 		"Need to download %d layers for Manifest %s",
-		len(ctx.layers), path.Base(ctx.builddir)[:12],
+		len(ctx.layers), filepath.Base(ctx.builddir)[:12],
 	))
 	return nil
 }
@@ -159,12 +177,12 @@ func (ctx *BuildContext) Build() error {
 	if err := prg.TrackFunction(color.BlueString("Building layer..."), ctx.makeLayer); err != nil {
 		return err
 	}
-	ctx.Manifest.SaveTo(path.Join(ctx.ldir, "particle.yaml"))
+	ctx.Manifest.SaveTo(filepath.Join(ctx.ldir, "particle.yaml"))
 	return nil
 }
 
 func (ctx *BuildContext) Enter() error {
-	if _, err := os.Stat(path.Join(ctx.builddir, "msys2.exe")); err != nil {
+	if _, err := os.Stat(filepath.Join(ctx.builddir, "msys2.exe")); err != nil {
 		fmt.Println(color.CyanString("Entering system environment..."))
 		ctx.runnerInstance = runner.NewThinRunner(ctx.builddir)
 		if err := ctx.runnerInstance.CreateEnvironment(); err != nil {
@@ -181,7 +199,7 @@ func (ctx *BuildContext) Enter() error {
 }
 
 func (ctx *BuildContext) makeLayer() error {
-	buildcacheDir := path.Join(ctx.builddir, "tmp", "buildcache")
+	buildcacheDir := filepath.Join(ctx.builddir, "tmp", "buildcache")
 	l, err := layer.CreateLayerFrom(buildcacheDir, layer.NewLayer("", ctx.homedir, ""))
 	if err != nil {
 		return err
@@ -217,11 +235,11 @@ func (ctx *BuildContext) fetchRunner() error {
 }
 
 func (ctx *BuildContext) calculateIntegrityHash() error {
-	d := path.Join(ctx.builddir, "build")
+	d := filepath.Join(ctx.builddir, "build")
 	files := utils.LDir(d, "")
 
 	for _, f := range files {
-		h, err := utils.CalcFileHash(path.Join(d, f))
+		h, err := utils.CalcFileHash(filepath.Join(d, f))
 		if err != nil {
 			return err
 		}
@@ -238,7 +256,7 @@ func (ctx *BuildContext) saveIntegrityHash() error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path.Join(ctx.builddir, "integrity.json"), integr, 0755)
+	return os.WriteFile(filepath.Join(ctx.builddir, "integrity.json"), integr, 0755)
 }
 
 func (ctx *BuildContext) buildDiff() error {
@@ -290,7 +308,7 @@ func (ctx *BuildContext) buildDiff() error {
 		deletions = append(deletions, file)
 	}
 
-	if len(deletions) > 0 {
+	if len(deletions) > 0 || true { // FIXME: For whatever forsaken reason, if no files in folder exists, then archive won't build
 		deletionsData := strings.Join(deletions, "\n")
 		if err = os.WriteFile(
 			filepath.Join(buildcacheDir, ".deletions"), []byte(deletionsData), 0755,
