@@ -11,7 +11,7 @@ import (
 	"runtime/debug"
 )
 
-const Version = "0.9.9-dev"
+const Version = "0.9.10-dev"
 
 var BuildTag string
 var BuildDate string
@@ -38,9 +38,9 @@ func main() {
 
 	subcommands := []Command{
 		NewCmdInit(),
-		NewCmdPrepare(),
-		NewCmdClean(),
 		NewCmdBuild(),
+		NewCmdClean(),
+		NewCmdExport(),
 		NewCmdEnter(),
 		NewCmdServe(),
 		NewCmdPublish(),
@@ -76,8 +76,8 @@ Usage: ` + binName + ` <command> [args]
 
 Commands:
 	init		Initializes blank particle directory
-	prepare		Prepares particle from manifest
-	build		Builds particle after preparations and modifications
+	build		Builds particle from manifest
+	package		Packages particle after build and modifications
 	enter		Enters particle environment shell
 	export		Exports particle distribution
 	auth		Logs you into remote repository account

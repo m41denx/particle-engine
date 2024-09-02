@@ -12,6 +12,7 @@ import (
 	"github.com/m41denx/particle-engine/structs"
 	"github.com/m41denx/particle-engine/utils"
 	"github.com/m41denx/particle-engine/utils/downloader"
+	cp "github.com/otiai10/copy"
 	"io"
 	"os"
 	"path/filepath"
@@ -52,6 +53,11 @@ func NewBuildContext(manifest manifest.Manifest, ldir string, config *structs.Co
 		homedir:           pc,
 		builddir:          bdir,
 	}
+}
+
+func (ctx *BuildContext) Export() error {
+	fmt.Println(color.BlueString("Exporting build %s to %s", filepath.Base(ctx.builddir)[:12], ctx.ldir))
+	return cp.Copy(filepath.Join(ctx.builddir, "build"), ctx.ldir)
 }
 
 func (ctx *BuildContext) Clean(all bool) error {
