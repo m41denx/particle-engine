@@ -2,6 +2,7 @@ package runner
 
 import (
 	"al.essio.dev/pkg/shellescape"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -15,7 +16,6 @@ type MsysRunner struct {
 }
 
 func NewFullRunner(workdir string) *MsysRunner {
-	panic("Linux Full runner is not supported yet")
 	return &MsysRunner{
 		workdir: workdir,
 		stdout:  os.Stdout,
@@ -33,7 +33,43 @@ func (r *MsysRunner) SetStdPipe(writer io.Writer) {
 }
 
 func (r *MsysRunner) CreateEnvironment() error {
-	return r.Run("whoami", nil)
+	fmt.Print("Checking tar... ")
+	if err := exec.Command("which", "tar").Run(); err != nil {
+		fmt.Println("\t\tno")
+		return err
+	} else {
+		fmt.Println("\t\tyes")
+	}
+	fmt.Print("Checking root...")
+	if err := exec.Command("sudo", "-nv").Run(); err != nil {
+		fmt.Println("\t\tno")
+		return err
+	} else {
+		fmt.Println("\t\tyes")
+	}
+	fmt.Print("Extracting Arch rootfs...")
+	if err := exec.Command(
+		"tar", "--strip-components=1", "-xf",
+		filepath.Join(r.workdir, "archlinux-bootstrap-x86_64.tar.zst"),
+		"-C", r.workdir, "--numeric-owner",
+	).Run(); err != nil {
+		fmt.Println("\t\tfailed")
+		return err
+	} else {
+		fmt.Println("\t\tdone")
+	}
+	os.Remove(filepath.Join(r.workdir, "archlinux-bootstrap-x86_64.tar.zst"))
+	fmt.Print("Preparing pacman...")
+	if err := r.Run("pacman-key --init", nil); err != nil {
+		return err
+	}
+	if err := r.Run("pacman-key --populate", nil); err != nil {
+		return err
+	}
+	if err := r.Run("echo 'Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch' >> /etc/pacman.d/mirrorlist", nil); err != nil {
+		return err
+	}
+	return r.Run("pacman -Sy --noconfirm", nil)
 }
 
 func (r *MsysRunner) Run(shellCommand string, env map[string]string) error {
@@ -44,7 +80,7 @@ func (r *MsysRunner) Run(shellCommand string, env map[string]string) error {
 	for k, v := range env {
 		environ = append(environ, k+"="+v)
 	}
-	cmd := exec.Command(filepath.Join(r.workdir, "usr", "bin", "bash.exe"), "-lc", shellCommand)
+	cmd := exec.Command(filepath.Join(r.workdir, "bin", "arch-chroot"), r.workdir, "/bin/bash", "-lc", shellCommand)
 	cmd.Dir = r.workdir
 	cmd.Env = environ
 	cmd.Stdout = r.stdout

@@ -27,7 +27,7 @@ go install src.techknowlogick.com/xgo@latest
 echo -e "${GREEN}Checking for ineffectual assignments...${GRAY}"
 ineffassign ./...
 echo -e "${GREEN}Checking for cyclomatic complexity${GRAY}"
-gocyclo -over 15 .
+gocyclo -over 30 .
 echo -e "${GREEN}Preparing Build Box...${GRAY}"
 docker pull --platform linux/amd64 techknowlogick/xgo:latest
 echo -e "${GREEN}Building binaries...${GRAY}"

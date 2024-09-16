@@ -188,19 +188,17 @@ func (ctx *BuildContext) Build() error {
 }
 
 func (ctx *BuildContext) Enter() error {
-	if _, err := os.Stat(filepath.Join(ctx.builddir, "msys2.exe")); err != nil {
+	_, err := os.Stat(filepath.Join(ctx.builddir, "msys2.exe"))
+	if err != nil {
+		_, err = os.Stat(filepath.Join(ctx.builddir, "bin", "arch-chroot"))
+	}
+	if err != nil {
 		fmt.Println(color.CyanString("Entering system environment..."))
 		ctx.runnerInstance = runner.NewThinRunner(ctx.builddir)
-		if err := ctx.runnerInstance.CreateEnvironment(); err != nil {
-			return err
-		}
 		return ctx.runnerInstance.Run("bash", nil)
 	}
 	fmt.Println(color.CyanString("Entering Full Arch environment..."))
 	ctx.runnerInstance = runner.NewFullRunner(ctx.builddir)
-	if err := ctx.runnerInstance.CreateEnvironment(); err != nil {
-		return err
-	}
 	return ctx.runnerInstance.Run("bash", nil)
 }
 
