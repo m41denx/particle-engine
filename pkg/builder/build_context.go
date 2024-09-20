@@ -135,7 +135,7 @@ func (ctx *BuildContext) PrepareEnvironment() error {
 			continue
 		}
 		err = prg.TrackFunction(color.BlueString("Running %s...", worker.manifest.Name), func() error {
-			return worker.RunAppliance(ctx.builddir, manifest.RecipeLayerStanza{})
+			return worker.RunAppliance(ctx.builddir)
 		})
 		if err != nil {
 			return err

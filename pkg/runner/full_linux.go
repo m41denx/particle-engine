@@ -40,6 +40,13 @@ func (r *MsysRunner) CreateEnvironment() error {
 	} else {
 		fmt.Println("\t\tyes")
 	}
+	fmt.Print("Checking zstd... ")
+	if err := exec.Command("which", "zstd").Run(); err != nil {
+		fmt.Println("\t\tno")
+		return err
+	} else {
+		fmt.Println("\t\tyes")
+	}
 	fmt.Print("Checking root...")
 	if err := exec.Command("sudo", "-nv").Run(); err != nil {
 		fmt.Println("\t\tno")
@@ -64,6 +71,10 @@ func (r *MsysRunner) CreateEnvironment() error {
 		return err
 	}
 	if err := r.Run("pacman-key --populate", nil); err != nil {
+		return err
+	}
+	// That's because of chroot
+	if err := r.Run("sed -i 's/CheckSpace/#CheckSpace/' /etc/pacman.conf", nil); err != nil {
 		return err
 	}
 	if err := r.Run("echo 'Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch' >> /etc/pacman.d/mirrorlist", nil); err != nil {

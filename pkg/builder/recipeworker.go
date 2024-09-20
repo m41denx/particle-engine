@@ -22,7 +22,9 @@ type RecipeWorker struct {
 	manifest manifest2.Manifest
 	layer    *layer.Layer
 
-	homedir string
+	homedir  string
+	override string
+	env      map[string]string
 }
 
 func NewRecipeWorker(ctx *BuildContext, parent *RecipeWorker, manifest manifest2.Manifest) *RecipeWorker {
@@ -31,6 +33,7 @@ func NewRecipeWorker(ctx *BuildContext, parent *RecipeWorker, manifest manifest2
 		parent:   parent,
 		manifest: manifest,
 		homedir:  ctx.homedir,
+		env:      make(map[string]string),
 	}
 }
 
@@ -85,11 +88,18 @@ func (rw *RecipeWorker) fetchChildren() error {
 			// We are getting deep in the tree, ignoring runnables
 			// There are only usables and result layer
 		}
+
 		// TODO: Acccount for Appliances' dependencies and somehow shove them in
 
 		worker, err := NewRecipeWorkerFromURL(rw.ctx, rw, meta)
 		if err != nil {
 			return err
+		}
+		if rw.parent == nil && child.ApplyParticle != "" {
+			worker.override = child.Command
+			if child.Env != nil {
+				worker.env = maps.Clone(child.Env)
+			}
 		}
 		if err = worker.fetchChildren(); err != nil {
 			return err
@@ -129,14 +139,14 @@ func (rw *RecipeWorker) ExtractLayer(destdir string, isRootfs bool) error {
 	}
 }
 
-func (rw *RecipeWorker) RunAppliance(destdir string, override manifest2.RecipeLayerStanza) error {
+func (rw *RecipeWorker) RunAppliance(destdir string) error {
 	if len(rw.manifest.Runnable.Build) == 0 {
 		return nil // Might as well be static particle
 	}
 
 	globEnv := map[string]string{}
-	if override.Env != nil {
-		globEnv = maps.Clone(override.Env)
+	if len(rw.env) > 0 {
+		globEnv = maps.Clone(rw.env)
 	}
 	if rw.ctx.runnerType == "full" {
 		maps.Copy(globEnv, map[string]string{
@@ -156,10 +166,10 @@ func (rw *RecipeWorker) RunAppliance(destdir string, override manifest2.RecipeLa
 	actions := slices.Clone(rw.manifest.Runnable.Build)
 
 	// Weird override af, but who knows
-	if override.Command != "" {
+	if rw.override != "" {
 		actions = []manifest2.RunnableBuildStanza{
 			{
-				Run: override.Command,
+				Run: rw.override,
 			},
 		}
 	}

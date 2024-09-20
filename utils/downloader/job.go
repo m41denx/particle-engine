@@ -66,6 +66,7 @@ func (j *Job) Do(wg *sync.WaitGroup) error {
 	if err != nil {
 		if j.retries > 0 {
 			j.retries--
+			wg.Add(1) // FIXME
 			return j.Do(wg)
 		}
 		return err
