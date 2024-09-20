@@ -2,13 +2,13 @@ package webserver
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m41denx/particle-engine/pkg/manifest"
 	"github.com/m41denx/particle-engine/pkg/webserver/db"
 	"github.com/m41denx/particle-engine/utils"
 	"golang.org/x/exp/slices"
+	"gorm.io/gorm"
 	"log"
 	"regexp"
 	"strings"
@@ -96,12 +96,11 @@ func apiUploadManifest(c *fiber.Ctx) error {
 		Author:      author,
 		UID:         user.ID,
 		Description: fmt.Sprintf("# %s\n--\n", manif.Name),
-		Layers:      make([]db.ParticleLayer, 0),
 		IsPrivate:   c.QueryBool("private"),
 		IsUnlisted:  c.QueryBool("unlisted"),
 	}
 
-	layer := db.ParticleLayer{
+	layer := &db.ParticleLayer{
 		Arch:    arch,
 		LayerID: manif.Layer.Block,
 		Version: version,
@@ -113,37 +112,37 @@ func apiUploadManifest(c *fiber.Ctx) error {
 		Name:   particle.Name,
 		UID:    particle.UID,
 		Author: author,
-	}).Preload("Layers").Select("id").First(&oldParticle).Error
+	}).Preload("Layers").First(&oldParticle).Error
 
 	if ex == nil {
 		// particle exists
 		particle = oldParticle
 	}
-	var errl error
-	for _, p := range particle.Layers {
+	layetExists := false
+	for i, p := range particle.Layers {
 		if p.Version == version && p.Arch == arch {
 			// layer exists
+			layetExists = true
 			if p.LayerID != manif.Layer.Block {
 				// hashes differ, delete old layer
 				if err := FS.DeleteFile(p.LayerID); err != nil {
 					log.Println(err)
 				}
 			}
-			errl = errors.New("layer exists")
 			layer.ID = p.ID
 			layer.Downloads = p.Downloads
-			p = layer
+			particle.Layers[i] = layer
 			break
 		}
 	}
 
-	if errl == nil {
+	if !layetExists {
 		// No such layer exists
 		particle.Layers = append(particle.Layers, layer)
 	}
 
 	if ex == nil {
-		err = DB.Updates(&particle).Error
+		err = DB.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&particle).Error
 	} else {
 		err = DB.Create(&particle).Error
 	}

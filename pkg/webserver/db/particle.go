@@ -8,7 +8,7 @@ type Particle struct {
 	Author      string
 	UID         uint
 	Description string
-	Layers      []ParticleLayer
+	Layers      []*ParticleLayer
 	IsPrivate   bool `gorm:"default:0"`
 	IsUnlisted  bool `gorm:"default:0"`
 }

@@ -34,15 +34,16 @@ type BuildContext struct {
 	runnerInstance    runner.Runner
 }
 
-func NewBuildContext(manifest manifest.Manifest, ldir string, config *structs.Config) *BuildContext {
+func NewBuildContext(manif manifest.Manifest, ldir string, config *structs.Config) *BuildContext {
 	home, _ := os.UserCacheDir()
 	pc := filepath.Join(home, "particle_cache")
-	manifestForHash := manifest
+	manifestForHash := manif
 	manifestForHash.Layer.Block = "[sha256 autogen]"
+	manifestForHash.Runnable = manifest.RunnableStanza{}
 	bdir := filepath.Join(pc, "temp", utils.CalcHash([]byte(manifestForHash.ToYaml())))
 	_ = os.MkdirAll(bdir, 0750)
 	return &BuildContext{
-		Manifest:          manifest,
+		Manifest:          manif,
 		config:            config,
 		runnerType:        "thin",
 		layers:            make(map[string]*layer.Layer),

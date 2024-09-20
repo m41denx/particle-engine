@@ -75,6 +75,8 @@ runnable:
   build:
     - run: |
         command -arg value
+    - copy: "$MOD/file1"
+      to: "$BUILD/file2"
   expose:
     python3: "/usr/bin/python.exe"
 ```
