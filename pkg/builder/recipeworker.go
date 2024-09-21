@@ -100,6 +100,9 @@ func (rw *RecipeWorker) fetchChildren() error {
 			if child.Env != nil {
 				worker.env = maps.Clone(child.Env)
 			}
+			if worker.manifest.Runnable.Runner == "full" {
+				rw.ctx.runnerType = "full"
+			}
 		}
 		if err = worker.fetchChildren(); err != nil {
 			return err
@@ -117,9 +120,9 @@ func (rw *RecipeWorker) fetchChildren() error {
 		rw.ctx.hookAddLayer(rw.layer)
 		rw.ctx.hookPushRecipe(rw)
 	}
-	if rw.manifest.Runnable.Runner == "full" {
-		rw.ctx.runnerType = "full"
-	}
+	//if rw.manifest.Runnable.Runner == "full" {
+	//	rw.ctx.runnerType = "full"
+	//}
 	return nil
 }
 

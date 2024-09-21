@@ -22,6 +22,7 @@ func NewCmdBuild() *CmdBuild {
 		strings.Join(utils.SUPPORTED_ARCH, ", ")))
 	cmd.fs.BoolVar(&cmd.clean, "clean", false, "Clean after build (only with export)")
 	cmd.fs.BoolVar(&cmd.export, "export", false, "Export package")
+	cmd.fs.BoolVar(&cmd.keep, "keep", false, "Don not clear build cache on error")
 	return cmd
 }
 
@@ -30,6 +31,7 @@ type CmdBuild struct {
 	arch   string
 	clean  bool
 	export bool
+	keep   bool
 	fs     *flag.FlagSet
 }
 
@@ -79,7 +81,9 @@ func (cmd *CmdBuild) Run() error {
 		return err
 	}
 	if err := ctx.PrepareEnvironment(); err != nil {
-		ctx.Clean(false)
+		if !cmd.keep {
+			ctx.Clean(false)
+		}
 		return err
 	}
 	if cmd.export {
