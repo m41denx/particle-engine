@@ -77,5 +77,5 @@ func (r *BusyboxRunner) Run(shellCommand string, env map[string]string) error {
 }
 
 func (r *BusyboxRunner) Copy(from string, to string, env map[string]string) error {
-	return r.Run("cp "+shellescape.Quote(from)+" "+shellescape.Quote(to), env)
+	return r.Run("cp -r "+shellescape.Quote(from)+" "+shellescape.Quote(to), env)
 }

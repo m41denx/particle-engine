@@ -11,7 +11,7 @@ import (
 	"runtime/debug"
 )
 
-const Version = "0.9.12-dev"
+const Version = "0.10.0-beta"
 
 var BuildTag string
 var BuildDate string

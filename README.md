@@ -5,10 +5,8 @@
 | OS                       | code   |
 |--------------------------|--------|
 | Windows x64              | `w64`  |
-| Windows x32 (Deprecated) | `w32`  |
 | Linux x64                | `l64`  |
 | Linux arm64              | `l64a` |
-| Linux x32 (Deprecated)   | `l32`  |
 | macOS x64 10.14+         | `d64`  |
 | macOS arm64 11+          | `d64a` |
 
@@ -63,7 +61,7 @@ layer:
 
 recipe:
     - use: fruitspace/gd_android@2.2
-    - apply: https://gdrainix.xyz/particles/rainix/gd_patcher
+    - apply: https://someothermod.xyz/particles/fifuser/gd_patcher
       env:
         AMOGUS: YES
       command: overriden

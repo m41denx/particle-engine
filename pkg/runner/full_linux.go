@@ -104,5 +104,5 @@ func (r *MsysRunner) Run(shellCommand string, env map[string]string) error {
 }
 
 func (r *MsysRunner) Copy(from string, to string, env map[string]string) error {
-	return r.Run("cp "+shellescape.Quote(from)+" "+shellescape.Quote(to), env)
+	return r.Run("cp -r "+shellescape.Quote(from)+" "+shellescape.Quote(to), env)
 }
