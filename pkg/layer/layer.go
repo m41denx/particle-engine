@@ -84,10 +84,11 @@ func (l *Layer) ExtractTo(dest string) (err error) {
 	f, err := os.ReadFile(filepath.Join(dest, ".deletions"))
 	if err == nil {
 		l.Deletions = strings.Split(string(f), "\n")
-		for i, d := range l.Deletions {
+		for _, d := range l.Deletions {
 			if strings.TrimSpace(d) == "" {
-				l.Deletions[i] = l.Deletions[len(l.Deletions)-1]
-				l.Deletions = l.Deletions[:len(l.Deletions)-1]
+				//l.Deletions[i] = l.Deletions[len(l.Deletions)-1]
+				//l.Deletions = l.Deletions[:len(l.Deletions)-1]
+				continue
 			} else {
 				err = os.Remove(filepath.Join(dest, d))
 				if err != nil {

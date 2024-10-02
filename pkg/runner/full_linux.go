@@ -69,7 +69,7 @@ func (r *MsysRunner) CreateEnvironment() error {
 		fmt.Println("\t\tdone")
 	}
 	os.Remove(filepath.Join(r.workdir, "archlinux-bootstrap-x86_64.tar.zst"))
-	if err := r.Run("sed -i 's/warning \"$chrootdir/#warning \"$chrootdir/' /bin/arch-chroot", nil); err != nil {
+	if err := r.Run("sed -i 's/warning \"$chrootdir/: #warning \"$chrootdir/' /bin/arch-chroot", nil); err != nil {
 		return err
 	}
 	fmt.Print("Preparing pacman...")
