@@ -11,6 +11,7 @@ require (
 	github.com/google/go-containerregistry v0.20.2
 	github.com/minio/selfupdate v0.6.0
 	github.com/otiai10/copy v1.14.0
+	go.etcd.io/bbolt v1.3.11
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/term v0.23.0
 	gopkg.in/yaml.v3 v3.0.1

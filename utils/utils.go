@@ -123,3 +123,24 @@ func SelfUpdate(ver string) error {
 	wg.Wait()
 	return err
 }
+
+func MapDiff(old map[string]string, new map[string]string) (additions map[string]string, deletions []string) {
+
+	for file, newHash := range new {
+		oldHash, ok := old[file]
+		if ok && newHash == oldHash {
+			continue
+		}
+		additions[file] = newHash
+	}
+
+	for file, _ := range old {
+		_, ok := new[file]
+		if ok {
+			continue
+		}
+		deletions = append(deletions, file)
+	}
+
+	return
+}

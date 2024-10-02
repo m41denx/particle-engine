@@ -22,6 +22,8 @@ type RecipeWorker struct {
 	manifest manifest2.Manifest
 	layer    *layer.Layer
 
+	cached   bool
+	hashsum  string
 	homedir  string
 	override string
 	env      map[string]string
@@ -97,12 +99,15 @@ func (rw *RecipeWorker) fetchChildren() error {
 		}
 		if rw.parent == nil && child.ApplyParticle != "" {
 			worker.override = child.Command
+			worker.cached = child.Cached
 			if child.Env != nil {
 				worker.env = maps.Clone(child.Env)
 			}
 			if worker.manifest.Runnable.Runner == "full" {
 				rw.ctx.runnerType = "full"
 			}
+			val, _ := yaml.Marshal(child)
+			worker.hashsum = utils.CalcHash([]byte(val))
 		}
 		if err = worker.fetchChildren(); err != nil {
 			return err

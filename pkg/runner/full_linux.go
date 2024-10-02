@@ -24,6 +24,9 @@ func NewFullRunner(workdir string) *MsysRunner {
 }
 
 func (r *MsysRunner) GetDependencyString() string {
+	if val := os.Getenv("PARTICLE_FULLRUNNER"); val != "" {
+		return val
+	}
 	return "core/fullrunner@latest"
 }
 

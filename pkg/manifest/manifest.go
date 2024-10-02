@@ -33,6 +33,7 @@ type RecipeLayerStanza struct {
 	ApplyParticle string     `yaml:"apply,omitempty" json:"apply,omitempty"`
 	Env           MetaStanza `yaml:"env,omitempty" json:"env,omitempty"`
 	Command       string     `yaml:"command,omitempty" json:"command,omitempty"`
+	Cached        bool       `yaml:"cached,omitempty" json:"cached,omitempty"`
 }
 
 func (m *RecipeLayerStanza) GetParticle() string {

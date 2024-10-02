@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/m41denx/particle-engine/pkg"
+	"github.com/m41denx/particle-engine/pkg/cache"
 	"github.com/m41denx/particle-engine/pkg/layer"
 	"github.com/m41denx/particle-engine/pkg/manifest"
 	"github.com/m41denx/particle-engine/pkg/runner"
@@ -14,6 +15,7 @@ import (
 	"github.com/m41denx/particle-engine/utils/downloader"
 	cp "github.com/otiai10/copy"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
@@ -21,17 +23,19 @@ import (
 )
 
 type BuildContext struct {
-	Manifest          manifest.Manifest
-	config            *structs.Config
-	longrecipe        []*RecipeWorker
-	layers            map[string]*layer.Layer
-	touchedAppliances bool
-	integrityData     map[string]string
-	ldir              string
-	homedir           string
-	builddir          string
-	runnerType        string
-	runnerInstance    runner.Runner
+	Manifest           manifest.Manifest
+	config             *structs.Config
+	longrecipe         []*RecipeWorker
+	layers             map[string]*layer.Layer
+	touchedAppliances  bool
+	integrityData      map[string]string
+	cacheIntegrityData map[string]string
+	ldir               string
+	homedir            string
+	builddir           string
+	runnerType         string
+	runnerInstance     runner.Runner
+	cache              cache.Cache
 }
 
 func NewBuildContext(manif manifest.Manifest, ldir string, config *structs.Config) *BuildContext {
@@ -42,17 +46,26 @@ func NewBuildContext(manif manifest.Manifest, ldir string, config *structs.Confi
 	manifestForHash.Runnable = manifest.RunnableStanza{}
 	bdir := filepath.Join(pc, "temp", utils.CalcHash([]byte(manifestForHash.ToYaml())))
 	_ = os.MkdirAll(bdir, 0750)
+	var cc cache.Cache
+	if c, err := cache.NewBboltCache(pc); err == nil {
+		cc = c
+	} else {
+		cc = cache.NewFakeCache()
+		fmt.Println(color.RedString("Failed to initialize BBolt cache: %s, using fake one", err))
+	}
 	return &BuildContext{
-		Manifest:          manif,
-		config:            config,
-		runnerType:        "thin",
-		layers:            make(map[string]*layer.Layer),
-		integrityData:     make(map[string]string),
-		longrecipe:        make([]*RecipeWorker, 0),
-		touchedAppliances: false,
-		ldir:              ldir,
-		homedir:           pc,
-		builddir:          bdir,
+		Manifest:           manif,
+		config:             config,
+		runnerType:         "thin",
+		layers:             make(map[string]*layer.Layer),
+		integrityData:      make(map[string]string),
+		cacheIntegrityData: make(map[string]string),
+		longrecipe:         make([]*RecipeWorker, 0),
+		touchedAppliances:  false,
+		ldir:               ldir,
+		homedir:            pc,
+		builddir:           bdir,
+		cache:              cc,
 	}
 }
 
@@ -135,10 +148,57 @@ func (ctx *BuildContext) PrepareEnvironment() error {
 			continue
 		}
 		err = prg.TrackFunction(color.BlueString("Running %s...", worker.manifest.Name), func() error {
+			if worker.cached {
+				// If appliance is cached and exists in cache
+				if val, _ := ctx.cache.Get([]byte(worker.hashsum)); val != nil {
+					cachedlayer := layer.NewLayer(string(val), ctx.homedir, worker.manifest.Layer.Server)
+					if cachedlayer.ExtractTo(ctx.builddir) == nil {
+						fmt.Println("Extracted from cache")
+						return nil
+					}
+				}
+				_ = ctx.calculateCacheIntegrityHash()
+			}
 			return worker.RunAppliance(ctx.builddir)
 		})
 		if err != nil {
 			return err
+		}
+		if worker.cached {
+			oldhashes := maps.Clone(ctx.cacheIntegrityData)
+			ctx.cacheIntegrityData = make(map[string]string)
+			_ = ctx.calculateCacheIntegrityHash()
+			toCache, toDelete := utils.MapDiff(oldhashes, ctx.cacheIntegrityData)
+			deletions := strings.Join(toDelete, "\n")
+			buildcacheDir := filepath.Join(ctx.builddir, ".cache")
+			if err := os.RemoveAll(buildcacheDir); err != nil {
+				return err
+			}
+
+			for file, _ := range toCache {
+				_ = os.MkdirAll(filepath.Dir(filepath.Join(buildcacheDir, file)), 0755)
+				fh, err1 := os.Open(filepath.Join(ctx.builddir, file))
+				nh, err2 := os.Create(filepath.Join(buildcacheDir, file))
+				if err1 != nil || err2 != nil {
+					return errors.Join(err1, err2)
+				}
+
+				_, err3 := io.Copy(nh, fh)
+				_ = fh.Close()
+				_ = nh.Close()
+				if err3 != nil {
+					return err3
+				}
+			}
+
+			if len(deletions) > 0 {
+				_ = os.WriteFile(filepath.Join(buildcacheDir, ".deletions"), []byte(deletions), 0644)
+			}
+			_, err = layer.CreateLayerFrom(buildcacheDir, layer.NewLayer("", ctx.homedir, ""))
+			if err != nil {
+				return err
+			}
+			os.RemoveAll(buildcacheDir)
 		}
 	}
 	if len(ctx.integrityData) == 0 {
@@ -253,6 +313,19 @@ func (ctx *BuildContext) calculateIntegrityHash() error {
 	return nil
 }
 
+func (ctx *BuildContext) calculateCacheIntegrityHash() error {
+	files := utils.LDir(ctx.builddir, "")
+
+	for _, f := range files {
+		h, err := utils.CalcFileHash(filepath.Join(ctx.builddir, f))
+		if err != nil {
+			return err
+		}
+		ctx.cacheIntegrityData[f] = h
+	}
+	return nil
+}
+
 func (ctx *BuildContext) saveIntegrityHash() error {
 	if err := ctx.calculateIntegrityHash(); err != nil {
 		return err
@@ -313,8 +386,12 @@ func (ctx *BuildContext) buildDiff() error {
 		deletions = append(deletions, file)
 	}
 
-	if len(deletions) > 0 || true { // FIXME: For whatever forsaken reason, if no files in folder exists, then archive won't build
+	if len(deletions) > 0 || true {
+		// FIXME: For whatever forsaken reason, if no files in folder exists, then archive won't build
 		deletionsData := strings.Join(deletions, "\n")
+		if len(deletionsData) == 0 {
+			deletionsData = "\n"
+		}
 		if err = os.WriteFile(
 			filepath.Join(buildcacheDir, ".deletions"), []byte(deletionsData), 0755,
 		); err != nil {

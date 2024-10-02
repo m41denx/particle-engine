@@ -7,6 +7,7 @@ import (
 	"github.com/m41denx/particle-engine/utils/downloader"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -42,7 +43,12 @@ func NewLayer(hash string, homedir string, server string) *Layer {
 }
 
 func CreateLayerFrom(dir string, blankLayer *Layer) (*Layer, error) {
-	tempFile := filepath.Join(os.TempDir(), "_pbuild_"+time.Now().Format("20060102150405")+".7z")
+	cdir := os.TempDir()
+	if runtime.GOOS == "linux" {
+		//FIXME: workaround for invalid cross-device link on linux
+		cdir, _ = os.UserCacheDir()
+	}
+	tempFile := filepath.Join(cdir, "_pbuild_"+time.Now().Format("20060102150405")+".7z")
 	defer os.Remove(tempFile)
 	err := pkg.UnzipProvider.OpenZip(tempFile).WorkDir(dir).AddDirectory("").Compress()
 	if err != nil {
