@@ -11,13 +11,15 @@ func NewCmdVersion() *CmdVersion {
 	cmd := &CmdVersion{
 		fs: flag.NewFlagSet("version", flag.ExitOnError),
 	}
-	cmd.fs.BoolVar(&cmd.update, "update", false, "Update to latest version")
+	cmd.fs.BoolVar(&cmd.update, "check", false, "Check for updates")
+	cmd.fs.BoolVar(&cmd.force, "update", false, "Update to latest version")
 	return cmd
 }
 
 type CmdVersion struct {
 	fs     *flag.FlagSet
 	update bool
+	force  bool
 }
 
 func (cmd *CmdVersion) Name() string {
@@ -36,8 +38,11 @@ func (cmd *CmdVersion) Run() error {
 	fmt.Println(color.CyanString("✨ Particle Engine v"+Version), "(c) M41den")
 	fmt.Println(color.CyanString("Build Tag:\t"), BuildTag)
 	fmt.Println(color.CyanString("Build Date:\t"), BuildDate)
+	if cmd.force {
+		cmd.update = true
+	}
 	if cmd.update {
-		return utils.SelfUpdate(Version)
+		return utils.GetUpdate(Version, cmd.force)
 	}
 	return nil
 }

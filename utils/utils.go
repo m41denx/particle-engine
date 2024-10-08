@@ -2,6 +2,7 @@ package utils
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/minio/selfupdate"
@@ -94,26 +95,61 @@ func PrepareStorage() string {
 	return pc
 }
 
-func SelfUpdate(ver string) error {
-	link := "https://s3.m41den.com/particle_releases/"
-	res, err := http.Get(link + "ver")
+func GetUpdate(ver string, update bool) error {
+	ver = "v" + ver
+	res, err := http.Get("https://api.github.com/repos/m41denx/particle-engine/releases/latest")
 	if err != nil {
 		return err
 	}
 	d, _ := io.ReadAll(res.Body)
-	newver := strings.Trim(string(d), "\n")
+	var apiresponse map[string]interface{}
+	err = json.Unmarshal(d, &apiresponse)
+	if err != nil {
+		return err
+	}
+	newver := apiresponse["tag_name"].(string)
 	if ver == newver {
 		fmt.Println(color.GreenString("[UPD] Already up to date: %s", ver))
 		return nil
 	}
 	fmt.Println(color.YellowString("[UPD] Found new version %s (Current: %s)", newver, ver))
+	changelog := strings.Split(apiresponse["body"].(string), "\n")
+	for _, l := range changelog {
+		l = strings.TrimSpace(l)
+		l = strings.TrimRight(l, "\r\n")
+		if l[0] == '#' {
+			fmt.Println("===" + color.CyanString(strings.TrimLeft(l, "#")))
+			continue
+		}
+		if l[0] == '*' || l[0] == '-' {
+			fmt.Println(color.GreenString("*" + l[1:]))
+		}
+	}
+	var downloadlink string
+	for _, asset := range apiresponse["assets"].([]interface{}) {
+		asset := asset.(map[string]interface{})
+		if strings.Contains(asset["name"].(string), runtime.GOOS) &&
+			strings.Contains(asset["name"].(string), runtime.GOARCH) {
+			downloadlink = asset["browser_download_url"].(string)
+			break
+		}
+	}
+	if downloadlink == "" {
+		return fmt.Errorf("No download link for your architecture found")
+	}
+	if update {
+		return SelfUpdate(downloadlink)
+	}
+	return nil
+}
 
+func SelfUpdate(url string) error {
 	progress := NewTreeProgress()
 	var wg sync.WaitGroup
 	wg.Add(1)
 	c := make(chan bool)
 	go progress.Run("Downloading update for "+GetArchString(), &wg, c)
-	dat, err := http.Get(link + "particle-" + GetArchString())
+	dat, err := http.Get(url)
 	if err != nil {
 		c <- true
 		return err
