@@ -111,6 +111,13 @@ func (ctx *BuildContext) FetchDependencies() error {
 	return nil
 }
 
+func (ctx *BuildContext) PullOnly() error {
+	if err := ctx.fetchRunner(); err != nil {
+		return err
+	}
+	return ctx.DownloadLayers()
+}
+
 func (ctx *BuildContext) PrepareEnvironment() error {
 	prg := utils.NewTreeProgress()
 	if err := ctx.fetchRunner(); err != nil {

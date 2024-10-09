@@ -47,6 +47,7 @@ func main() {
 		NewCmdPublish(),
 		NewCmdAuth(),
 		NewCmdVersion(),
+		NewCmdPull(),
 	}
 
 	if len(os.Args) < 2 {
