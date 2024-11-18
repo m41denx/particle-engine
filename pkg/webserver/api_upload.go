@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -207,6 +208,69 @@ func apiUploadLayer(c *fiber.Ctx) error {
 	}
 	maxSz := user.MaxAllowedSize - *sz // To check if user is allowed to upload such large file
 
+	contentSize := c.Get("Content-Length") // I know it's slightly bigger than layer size
+	if contentSize == "" {
+		return c.Status(500).JSON(ErrorResponse{
+			Message: "Content-Length header is missing",
+		})
+	}
+	contentSizeInt, err := strconv.Atoi(contentSize)
+	if err != nil {
+		return c.Status(500).JSON(ErrorResponse{
+			Message: err.Error(),
+		})
+	}
+	if uint(contentSizeInt) > maxSz {
+		return c.Status(400).JSON(ErrorResponse{
+			Message: fmt.Sprintf("You don't have available space for that: %.2f MB of %.2f MB",
+				float64(contentSizeInt)/1024/1024, float64(maxSz)/1024/1024),
+		})
+	}
+
+	layerHash := c.Get("Layer-Hash")
+
+	if layerHash == "" {
+		return c.Status(500).JSON(ErrorResponse{
+			Message: "Layer-Hash header is missing",
+		})
+	}
+
+	var particleLayer db.ParticleLayer
+	err = DB.Where(db.ParticleLayer{
+		ParticleID: particle.ID,
+		Arch:       arch,
+		Version:    version,
+		LayerID:    layerHash,
+	}).First(&particleLayer).Error
+	if err != nil {
+		return c.Status(500).JSON(ErrorResponse{
+			Message: err.Error(),
+		})
+	}
+
+	shallow := false
+
+	// Check if other layer with same hash exists so we can reuse it
+	var hashLookup db.ParticleLayer
+	if DB.Where(db.ParticleLayer{LayerID: layerHash}).First(&hashLookup).Error == nil &&
+		hashLookup.Size != 0 {
+		shallow = true
+	}
+
+	fmt.Printf("[%s] Size: %d, Shallow?: %t\n", layerHash, contentSizeInt, shallow)
+
+	err = DB.Model(&particleLayer).Updates(db.ParticleLayer{Size: uint(contentSizeInt)}).Error
+	if err != nil {
+		return c.Status(500).JSON(ErrorResponse{
+			Message: err.Error(),
+		})
+	}
+
+	if shallow {
+		fmt.Println(c.Request().CloseBodyStream())
+		return nil // Nothing to do
+	}
+
 	metrics.NewStep("Parsing Multipart")
 
 	mpfd, err := c.MultipartForm()
@@ -223,50 +287,19 @@ func apiUploadLayer(c *fiber.Ctx) error {
 	}
 	layer := layers[0]
 
-	if uint(layer.Size) > maxSz {
+	layerID := strings.ReplaceAll(layer.Filename, ".7z", "")
+	if layerHash != layerID {
 		return c.Status(400).JSON(ErrorResponse{
-			Message: fmt.Sprintf("You don't have available space for that: %.2f MB of %.2f MB",
-				float64(layer.Size)/1024/1024, float64(maxSz)/1024/1024),
+			Message: "Layer hash mismatch",
 		})
 	}
-
-	layerID := strings.ReplaceAll(layer.Filename, ".7z", "")
 	ld, err := layer.Open()
 	if err != nil {
 		return c.Status(500).JSON(ErrorResponse{
 			Message: err.Error(),
 		})
 	}
-	defer ld.Close()
-
-	var particleLayer db.ParticleLayer
-	err = DB.Where(db.ParticleLayer{
-		ParticleID: particle.ID,
-		Arch:       arch,
-		Version:    version,
-		LayerID:    layerID,
-	}).First(&particleLayer).Error
-	if err != nil {
-		return c.Status(500).JSON(ErrorResponse{
-			Message: err.Error(),
-		})
-	}
-
-	shallow := false
-	if particleLayer.Size != 0 && particleLayer.Size == uint(layer.Size) {
-		shallow = true
-	}
-
-	err = DB.Model(&particleLayer).Updates(db.ParticleLayer{Size: uint(layer.Size)}).Error
-	if err != nil {
-		return c.Status(500).JSON(ErrorResponse{
-			Message: err.Error(),
-		})
-	}
-
-	if shallow {
-		return nil // Nothing to do
-	}
+	defer func() { _ = ld.Close() }()
 
 	metrics.NewStep("Streaming to S3")
 

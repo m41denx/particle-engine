@@ -65,58 +65,6 @@ func (r *RepoManager) WithUnlisted(unlisted bool) *RepoManager {
 	return r
 }
 
-func (r *RepoManager) Pull(name string) error {
-	panic("not implemented")
-	return nil
-	//	var err error
-	//
-	//	if r.arch == "" {
-	//		r.arch = utils.GetArchString()
-	//	}
-	//
-	//	// Parse versions
-	//	if len(r.meta.Fullname) == 0 {
-	//		r.meta, err = manifest.ParseParticleURL(name)
-	//	} else {
-	//		r.meta, err = manifest.ParseParticleURL(r.name)
-	//	}
-	//	if err != nil {
-	//		return err
-	//	}
-	//
-	//	if len(r.version) == 0 {
-	//		ver := strings.SplitN(name, "@", 2)
-	//		if len(ver) == 2 {
-	//			r.version = ver[1]
-	//		} else {
-	//			r.version = "latest"
-	//		}
-	//	} else {
-	//		r.version = strings.SplitN(r.version, "@", 2)[0]
-	//	}
-	//
-	//	name = r.name + "@" + r.version
-	//
-	//	virtparticle, err := NewParticleFromString(fmt.Sprintf(`
-	//{
-	//	"name": "blank",
-	//	"server": "%s",
-	//	"recipe": {
-	//		"base": "%s",
-	//		"apply": [],
-	//		"engines": [],
-	//		"run": []
-	//	}
-	//
-	//}`, r.url, name))
-	//
-	//	if err != nil {
-	//		return err
-	//	}
-	//	virtparticle.Analyze(true)
-	//	return nil
-}
-
 func (r *RepoManager) Publish(ctx *builder.BuildContext) error {
 	manif := ctx.Manifest
 
@@ -207,6 +155,8 @@ func (r *RepoManager) Publish(ctx *builder.BuildContext) error {
 			return err
 		}
 		req, _ = pkg.Config.GenerateRequestURL(req, r.url)
+
+		req.Header.Set("Layer-Hash", manif.Layer.Block)
 
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
