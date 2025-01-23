@@ -53,10 +53,10 @@ func (d *Downloader) AddJob(job *Job) {
 func (d *Downloader) Do() []error {
 	var errs []error
 
-	step := int(math.Min(float64(d.threads), float64(len(d.jobs))))
+	step := min(d.threads, len(d.jobs))
 	for i := 0; i < len(d.jobs); i += step {
 		wg := new(sync.WaitGroup)
-		wg.Add(step)
+		wg.Add(min(step, len(d.jobs)-i))
 		for j := i; j < i+step && j < len(d.jobs); j++ {
 			go func() {
 				if err := d.jobs[j].Do(wg); err != nil {
@@ -74,4 +74,8 @@ func (d *Downloader) Do() []error {
 	}
 
 	return errs
+}
+
+func min(a, b int) int {
+	return int(math.Min(float64(a), float64(b)))
 }
