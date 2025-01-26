@@ -46,12 +46,14 @@ func NewBuildContext(manif manifest.Manifest, ldir string, config *structs.Confi
 	manifestForHash.Runnable = manifest.RunnableStanza{}
 	bdir := filepath.Join(pc, "temp", utils.CalcHash([]byte(manifestForHash.ToYaml())))
 	_ = os.MkdirAll(bdir, 0750)
-	var cc cache.Cache
-	if c, err := cache.NewBboltCache(pc); err == nil {
-		cc = c
-	} else {
-		cc = cache.NewFakeCache()
-		fmt.Println(color.RedString("Failed to initialize BBolt cache: %s, using fake one", err))
+	if pkg.SharedCache == nil {
+		// Initialize cache
+		if c, err := cache.NewBboltCache(pc); err == nil {
+			pkg.SharedCache = c
+		} else {
+			pkg.SharedCache = cache.NewFakeCache()
+			fmt.Println(color.RedString("Failed to initialize BBolt cache: %s, using fake one", err))
+		}
 	}
 	return &BuildContext{
 		Manifest:           manif,
@@ -65,7 +67,7 @@ func NewBuildContext(manif manifest.Manifest, ldir string, config *structs.Confi
 		ldir:               ldir,
 		homedir:            pc,
 		builddir:           bdir,
-		cache:              cc,
+		cache:              pkg.SharedCache,
 	}
 }
 

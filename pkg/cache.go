@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"github.com/m41denx/particle-engine/pkg/cache"
 	"github.com/m41denx/particle-engine/structs"
 	"github.com/m41denx/particle-engine/utils"
 	"os"
@@ -25,3 +26,5 @@ var NUMCPU = func() int {
 	}
 	return ncpu
 }()
+
+var SharedCache cache.Cache
