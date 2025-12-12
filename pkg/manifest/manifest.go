@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-const DefaultRepo = "http://hub.fruitspace.one/"
+const DefaultRepo = "https://particle.m41den.dev/"
 
 //const DefaultRepo = "http://127.0.0.1:8000/"
 

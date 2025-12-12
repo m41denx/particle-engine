@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const DefaultLayerRepo = "http://hub.fruitspace.one/layers/"
+const DefaultLayerRepo = "https://particle.m41den.dev/layers/"
 
 //const DefaultLayerRepo = "http://localhost:8000/layers/"
 

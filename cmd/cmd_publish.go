@@ -52,7 +52,7 @@ Usage: ` + color.CyanString(binName+" publish <path> [args]") + `
 
 	This command publishes built particle at <path> to repository.
 
-	Example: ` + binName + ` publish ~/particle -n particular -v 1.0 -u https://hub.fruitspace.one
+	Example: ` + binName + ` publish ~/particle -n particular -v 1.0 -u https://particle.m41den.dev
 
 	Please see the individual subcommand help for detailed usage information.
 `

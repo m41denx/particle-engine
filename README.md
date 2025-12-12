@@ -53,7 +53,7 @@ layer:
     server: "http://optional.com/v1"
 
 recipe:
-    - use: fruitspace/gd_android@2.2
+    - use: rigby/gd_android@2.2
     - apply: https://someothermod.xyz/particles/fifuser/gd_patcher
       env:
         KAFIF: YES
@@ -158,7 +158,7 @@ particle publish <dir>
 ```
 Не забудьте заглянуть в помощь для подробностей (`particle publish -h`)
 
-Чтобы опубликовать - надо будет войти в аккаунт FruitSpace ParticleHub через
+Чтобы опубликовать - надо будет войти в аккаунт ParticleHub через
 ```shell
 particle auth -a <username> -t <token>
 ```

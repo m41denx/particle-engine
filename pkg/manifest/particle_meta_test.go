@@ -9,9 +9,9 @@ var TestCases = map[string][]string{
 	"https://domain.com/user/particle@tag-22": {"https://domain.com/", "user", "particle", "tag-22"},
 	"http://domain.com/user/particle@tag-22":  {"http://domain.com/", "user", "particle", "tag-22"},
 	"domain.com/user/particle@tag-22":         nil,
-	"user/particle@tag-22":                    {"http://hub.fruitspace.one/", "user", "particle", "tag-22"},
-	"user/particle":                           {"http://hub.fruitspace.one/", "user", "particle", "latest"},
-	"user/particle@.2.2.":                     {"http://hub.fruitspace.one/", "user", "particle", ".2.2."},
+	"user/particle@tag-22":                    {"https://particle.m41den.dev/", "user", "particle", "tag-22"},
+	"user/particle":                           {"https://particle.m41den.dev/", "user", "particle", "latest"},
+	"user/particle@.2.2.":                     {"https://particle.m41den.dev/", "user", "particle", ".2.2."},
 	"user/particle@.2.2.@2.2.2":               nil,
 }
 
