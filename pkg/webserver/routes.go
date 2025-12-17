@@ -2,6 +2,12 @@ package webserver
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/fatih/color"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/basicauth"
@@ -10,14 +16,10 @@ import (
 	"github.com/m41denx/particle-engine/pkg/webserver/db"
 	"github.com/m41denx/particle-engine/utils/fs"
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	logger2 "gorm.io/gorm/logger"
-	"log"
-	"os"
-	"strconv"
-	"strings"
-	"time"
 )
 
 func StartServer(host string, port uint) error {
@@ -62,6 +64,19 @@ func InitDB(dbtype string, dsn string) (err error) {
 	switch dbtype {
 	case "mysql":
 		DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+			Logger: logger2.New(
+				log.New(os.Stdout, "\r\n", log.LstdFlags),
+				logger2.Config{
+					SlowThreshold:             time.Second,  // Slow SQL threshold
+					LogLevel:                  logger2.Info, // Log level
+					ParameterizedQueries:      false,
+					IgnoreRecordNotFoundError: false,
+					Colorful:                  true,
+				},
+			),
+		})
+	case "postgres":
+		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 			Logger: logger2.New(
 				log.New(os.Stdout, "\r\n", log.LstdFlags),
 				logger2.Config{

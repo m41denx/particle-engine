@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"runtime/debug"
+
 	"github.com/fatih/color"
 	"github.com/m41denx/particle-engine/pkg"
 	"github.com/m41denx/particle-engine/structs"
 	"github.com/m41denx/particle-engine/utils"
-	"os"
-	"path/filepath"
-	"runtime/debug"
 )
 
 var Version string

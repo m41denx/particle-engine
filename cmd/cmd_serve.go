@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+
 	"github.com/fatih/color"
 	"github.com/m41denx/particle-engine/pkg/webserver"
 )
@@ -13,7 +14,7 @@ func NewCmdServe() *CmdServe {
 	cmd.fs.StringVar(&cmd.host, "h", "127.0.0.1", "Host")
 	cmd.fs.UintVar(&cmd.port, "p", 3000, "Port")
 
-	cmd.fs.StringVar(&cmd.dbm, "dbm", "local", "DB backend (mysql/local)")
+	cmd.fs.StringVar(&cmd.dbm, "dbm", "local", "DB backend (mysql/postgres/local)")
 	cmd.fs.StringVar(&cmd.dbDSN, "dbaddr", "local.db", "DB DSN (user:pass@tcp(ADDR:PORT)/dbname")
 
 	cmd.fs.StringVar(&cmd.fsm, "fsm", "local", "File Storage backend (s3/local)")
@@ -32,7 +33,7 @@ type CmdServe struct {
 	fs           *flag.FlagSet
 	host         string // WS host
 	port         uint   // WS port
-	dbm          string // DB backend (mysql/local)
+	dbm          string // DB backend (mysql/postgres/local)
 	dbDSN        string // DB DSN
 	fsm          string // File Storage backend (s3/local)
 	fs3AccessKey string // S3 access key

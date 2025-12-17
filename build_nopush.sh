@@ -29,11 +29,16 @@ echo -e "${GREEN}Preparing Build Box...${GRAY}"
 docker pull --platform linux/amd64 techknowlogick/xgo:go-1.24.x
 echo -e "${GREEN}Building binaries...${GRAY}"
 mkdir -p ./build
-IFS=","
-for target in $TARGETS; do
-  echo -e "${BLUE}Target: ${target}...${GRAY}"
-done
 rm -rf ./build/*
 xgo -image techknowlogick/xgo:go-1.24.x -targets "$TARGETS" \
   -ldflags="-s -w -X main.BuildTag=$(git rev-parse --short HEAD) -X main.BuildDate=$(date '+%Y-%m-%dT%H:%M') -X main.Version=${VERSION}" \
   -dest ./build/ -out particle -pkg cmd .
+
+#IFS=","
+#for target in $TARGETS; do
+#  target="particle-${target//\//-}*"
+#  if [[ ! "$target" == *"darwin"* ]]; then
+#    echo -e "Compressing ${BLUE}Target: ${target}...${GRAY}"
+#    upx "./build/$target"
+#  fi
+#done
