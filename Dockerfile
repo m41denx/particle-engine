@@ -6,8 +6,8 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN go build -ldflags="-s -w -X main.BuildTag=$(git rev-parse --short HEAD) -X main.BuildDate=$(date '+%Y-%m-%dT%H:%M') -X main.Version=${VERSION}" \
-     -o particle "./cmd"
+RUN CGO_ENABLED=0 go build -ldflags="-s -w -X main.BuildTag=$(git rev-parse --short HEAD) -X main.BuildDate=$(date '+%Y-%m-%dT%H:%M') -X main.Version=${VERSION}" \
+     -o particle ./cmd/...
 
 FROM alpine:latest
 RUN apk add --no-cache ca-certificates tzdata
