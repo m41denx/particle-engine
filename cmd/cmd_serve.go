@@ -23,8 +23,8 @@ func NewCmdServe() *CmdServe {
 	cmd.fs.StringVar(&cmd.fs3Region, "fs3-region", "us-east-1", "S3 region")
 	cmd.fs.StringVar(&cmd.fs3Bucket, "fs3-bucket", "particles", "S3 bucket")
 	cmd.fs.StringVar(&cmd.fs3Endpoint, "fs3-endpoint", "https://s3.amazonaws.com", "S3 endpoint")
-	cmd.fs.StringVar(&cmd.fs3Domain, "fs3-domain", "https://particle.m41den.dev", "S3 layers domain")
-	cmd.fs.StringVar(&cmd.fs3Prefix, "fs3-prefix", "/layers", "S3 prefix")
+	cmd.fs.StringVar(&cmd.fs3Domain, "fs3-domain", "", "S3 layers domain") // https://particle.m41den.dev
+	cmd.fs.StringVar(&cmd.fs3Prefix, "fs3-prefix", "", "S3 prefix")        // /layers
 
 	return cmd
 }
